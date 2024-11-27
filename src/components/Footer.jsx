@@ -9,7 +9,7 @@ const Footer = () => {
                     <div>
                         <h3 className="text-xl font-semibold mb-4">About our Shop</h3>
                         <p className="text-gray-400">
-                            This is an e-commerce platform for my moms small business offering a wide range of products to meet your needs.
+                            This is an e-commerce platform for my moms small business.
                             Our mission is to provide quality products with fast and reliable delivery.
                         </p>
                     </div>

@@ -4,10 +4,9 @@ import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import ProductCard from "../components/ProductCard";
 import useFetch from "../hooks/useFetch";
-
+import config from "../config";
 const Home = () => {
-    const { data: products, loading, error } = useFetch(`${process.env.REACT_APP_API_URL}/products`);
-
+    const { data: products, loading } = useFetch(`${config.API_URL}/products`);
     // Animation variants for product cards
     const cardVariants = {
         hidden: { opacity: 0, y: 20 },
@@ -15,18 +14,18 @@ const Home = () => {
     };
 
     return (
-        <div className="home bg-gray-100 py-6">
+        <div className="home bg-neutral-100 py-6">
             {/* Hero Section */}
             <div
                 className="hero-banner relative bg-cover bg-center h-20 md:h-20 w-full flex items-center justify-center"
-                style={{ backgroundImage: `url('/hero-banner.jpg')` }}
+                style={{ backgroundImage: `url('/hero-banner.jpg')`, filter: 'grayscale(100%)' }}
             >
-                <h1 className="text-4xl md:text-6xl font-bold text-black">Vince Warren Pradas</h1>
+                <h1 className="text-4xl md:text-6xl font-bold text-neutral-900">Vince Warren Pradas</h1>
             </div>
 
             {/* Featured Products Section */}
             <div className="container mx-auto mt-10 px-4 md:px-8">
-                <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 text-center mb-6">
+                <h2 className="text-2xl md:text-3xl font-semibold text-neutral-900 text-center mb-6">
                     Featured Products
                 </h2>
                 <div className="product-grid grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -36,7 +35,7 @@ const Home = () => {
                             .map((_, index) => (
                                 <motion.div
                                     key={index}
-                                    className="bg-white p-4 rounded-lg shadow-lg border border-gray-300"
+                                    className="bg-neutral-200 p-4 rounded-lg shadow-lg border border-neutral-300"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -46,17 +45,17 @@ const Home = () => {
                                     <Skeleton height={15} width="80%" />
                                 </motion.div>
                             ))
-                        : products.map((product, index) => (
-                            <motion.div
-                                key={product.id}
-                                variants={cardVariants}
-                                initial="hidden"
-                                animate="visible"
-                                transition={{ duration: 0.5, delay: index * 0.1 }}
-                            >
-                                <ProductCard product={product} />
-                            </motion.div>
-                        ))}
+                        : products && products.length > 0 && products.map((product, index) => (
+                        <motion.div
+                            key={product.id}
+                            variants={cardVariants}
+                            initial="hidden"
+                            animate="visible"
+                            transition={{ duration: 0.5, delay: index * 0.1 }}
+                        >
+                            <ProductCard product={product} />
+                        </motion.div>
+                    ))}
                 </div>
             </div>
         </div>
