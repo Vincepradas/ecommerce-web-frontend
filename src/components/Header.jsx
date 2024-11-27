@@ -1,8 +1,44 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom"; // Import `useNavigate`
+import PropTypes from 'prop-types';
+import { confirmable } from 'react-confirm';
+import { confirmWrapper, confirm } from './createConfirmation'
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const navigate = useNavigate(); // Initialize `useNavigate`
+
+    // Check if the user is logged in by checking the presence of the token
+    const checkIfLoggedIn = () => {
+        const token = localStorage.getItem("authToken"); // Get token from localStorage
+        return token !== null; // If token exists, return true (logged in)
+    };
+
+    const [isLoggedIn, setIsLoggedIn] = useState(checkIfLoggedIn); // Initialize isLoggedIn state based on token
+
+    // Handle login or profile navigation
+    const handleLoginClick = () => {
+        if (isLoggedIn) {
+            // If logged in, navigate to the profile page
+            navigate("/profile");
+        } else {
+            // If not logged in, navigate to the login page
+            navigate("/login");
+        }
+    };
+
+    // Optionally, handle logout to remove token
+    const handleLogout = ()=> {
+            localStorage.removeItem("authToken");
+            setIsLoggedIn(false);
+            navigate("/");
+
+    };
+
+    // This will update the login status whenever the component mounts or the token changes
+    useEffect(() => {
+        setIsLoggedIn(checkIfLoggedIn());
+    }, []); // Empty dependency array means this runs only once on component mount
 
     return (
         <header className="bg-black text-white shadow-md sticky top-0 z-50">
@@ -33,13 +69,23 @@ const Header = () => {
                         </Link>
                     </li>
                     <li>
-                        <Link
-                            to="/login"
+                        <button
+                            onClick={handleLoginClick} // Trigger the login or profile redirection
                             className="text-gray-300 hover:text-white transition duration-300"
                         >
-                            Login
-                        </Link>
+                            {isLoggedIn ? "Profile" : "Login"} {/* Conditionally render text */}
+                        </button>
                     </li>
+                    {isLoggedIn && (
+                        <li>
+                            <button
+                                onClick={handleLogout}
+                                className="text-gray-300 hover:text-white transition duration-300"
+                            >
+                                Logout
+                            </button>
+                        </li>
+                    )}
                 </ul>
 
                 {/* Mobile Menu Button */}
@@ -76,14 +122,29 @@ const Header = () => {
                         </Link>
                     </li>
                     <li>
-                        <Link
-                            to="/login"
+                        <button
+                            onClick={() => {
+                                setIsMenuOpen(false);
+                                handleLoginClick(); // Close menu and navigate
+                            }}
                             className="block text-gray-300 hover:text-white transition duration-300"
-                            onClick={() => setIsMenuOpen(false)}
                         >
-                            Login
-                        </Link>
+                            {isLoggedIn ? "Profile" : "Login"} {/* Conditionally render text */}
+                        </button>
                     </li>
+                    {isLoggedIn && (
+                        <li>
+                            <button
+                                onClick={() => {
+                                    setIsMenuOpen(false);
+                                    handleLogout();
+                                }}
+                                className="block text-gray-300 hover:text-white transition duration-300"
+                            >
+                                Logout
+                            </button>
+                        </li>
+                    )}
                 </ul>
             )}
         </header>
