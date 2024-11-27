@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.h-56 {
+    height: 14rem;
+}
+
+.object-cover {
+    object-fit: cover;
+}
