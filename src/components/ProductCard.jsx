@@ -2,9 +2,9 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 const ProductCard = ({ product }) => {
-    const thumbnail =
-        product.media.length > 0 ? product.media[0].url : "/placeholder-thumbnail.jpg";
-
+    // Safely get the thumbnail URL, if it exists
+    const thumbnail = product.thumbnail?.url;
+    console.log("THUMBNAIL", thumbnail);
     // Calculate the discounted price if a discount exists
     const discountedPrice =
         product.discount && product.price
@@ -19,14 +19,22 @@ const ProductCard = ({ product }) => {
                     {product.discount}% OFF
                 </div>
             )}
+
             {/* Product Thumbnail */}
             <Link to={`/products/${product._id}`} className="relative block h-[60%]">
-                <img
-                    src={thumbnail}
-                    alt={`${product.name} Thumbnail`}
-                    className="h-full w-full object-contain transition-transform duration-300 hover:scale-105"
-                />
+                {thumbnail ? (
+                    <img
+                        src={thumbnail}
+                        alt={`${product.name} Thumbnail`}
+                        className="h-full w-full object-contain transition-transform duration-300 hover:scale-105"
+                    />
+                ) : (
+                    <div className="h-full w-full bg-gray-200 flex items-center justify-center">
+                        <span className="text-gray-500">No Image Available</span>
+                    </div>
+                )}
             </Link>
+
             <div className="p-4 flex flex-col justify-between h-[40%]">
                 <h3 className="text-lg font-semibold text-gray-800 line-clamp-1">
                     {product.name}
@@ -36,17 +44,17 @@ const ProductCard = ({ product }) => {
                     {/* Original Price */}
                     {discountedPrice ? (
                         <>
-              <span className="text-gray-500 line-through text-sm">
-                PHP {product.price.toFixed(2)}
-              </span>
+                            <span className="text-gray-500 line-through text-sm">
+                                PHP {product.price.toFixed(2)}
+                            </span>
                             <span className="text-red-500 font-bold">
-                PHP {discountedPrice.toFixed(2)}
-              </span>
+                                PHP {discountedPrice.toFixed(2)}
+                            </span>
                         </>
                     ) : (
                         <span className="text-red-500 font-bold">
-              PHP {product.price.toFixed(2)}
-            </span>
+                            PHP {product.price.toFixed(2)}
+                        </span>
                     )}
                 </div>
             </div>

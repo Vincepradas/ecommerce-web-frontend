@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom"; // Import `useNavigate`
-import PropTypes from 'prop-types';
-import { confirmable } from 'react-confirm';
-import { confirmWrapper, confirm } from './createConfirmation'
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -46,7 +43,7 @@ const Header = () => {
                 {/* Logo */}
                 <div className="text-2xl font-bold">
                     <Link to="/" className="hover:text-blue-400 transition duration-300">
-                        MyShop
+                        Sandra's
                     </Link>
                 </div>
 
