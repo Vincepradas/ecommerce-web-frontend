@@ -41,7 +41,7 @@ const Home = () => {
                     <span className="relative inline-block">
                         <span className="font-normal text-sm text-gray-600 mt-2 block font-poppins">
                             <span className="font-bold">Note:</span> Delivery is currently available only within
-                            <span className="font-bold underline"> CARCANMADCARLAN</span>. Kindly check if your location is eligible for delivery during checkout.
+                            <span className="font-bold"> CARCANMADCARLAN</span>. Kindly check if your location is eligible for delivery during checkout.
                         </span>
                     </span>
                 </h2>
