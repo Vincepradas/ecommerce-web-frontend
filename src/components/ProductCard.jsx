@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 const ProductCard = ({ product }) => {
     // Safely get the thumbnail URL, if it exists
     const thumbnail = product.thumbnail?.url;
-    console.log("THUMBNAIL", thumbnail);
     // Calculate the discounted price if a discount exists
     const discountedPrice =
         product.discount && product.price
