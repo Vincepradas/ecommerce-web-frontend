@@ -38,11 +38,11 @@ const Header = () => {
     }, []); // Empty dependency array means this runs only once on component mount
 
     return (
-        <header className="bg-black text-white shadow-md sticky top-0 z-50">
+        <header className="bg-white shadow-md sticky top-0 z-50">
             <nav className="container mx-auto px-4 py-3 flex items-center justify-between">
                 {/* Logo */}
                 <div className="text-2xl font-bold">
-                    <Link to="/" className="hover:text-blue-400 transition duration-300">
+                    <Link to="/" className="text-[#1F2232] hover:text-[#596475] transition duration-300">
                         Sandra's
                     </Link>
                 </div>
@@ -52,7 +52,7 @@ const Header = () => {
                     <li>
                         <Link
                             to="/"
-                            className="text-gray-300 hover:text-white transition duration-300"
+                            className="text-[#5C415D] hover:text-[#E94F37]  transition duration-300"
                         >
                             Home
                         </Link>
@@ -60,7 +60,7 @@ const Header = () => {
                     <li>
                         <Link
                             to="/cart"
-                            className="text-gray-300 hover:text-white transition duration-300"
+                            className="text-[#5C415D] hover:text-[#E94F37]  transition duration-300"
                         >
                             Cart
                         </Link>
@@ -68,7 +68,7 @@ const Header = () => {
                     <li>
                         <button
                             onClick={handleLoginClick} // Trigger the login or profile redirection
-                            className="text-gray-300 hover:text-white transition duration-300"
+                            className="text-[#5C415D] hover:text-[#E94F37]  transition duration-300"
                         >
                             {isLoggedIn ? "Profile" : "Login"} {/* Conditionally render text */}
                         </button>
@@ -77,7 +77,7 @@ const Header = () => {
                         <li>
                             <button
                                 onClick={handleLogout}
-                                className="text-gray-300 hover:text-white transition duration-300"
+                                className="text-[#5C415D] hover:text-[#E94F37]  transition duration-300"
                             >
                                 Logout
                             </button>
@@ -89,7 +89,7 @@ const Header = () => {
                 <div className="md:hidden">
                     <button
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        className="text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        className="text-[#5C415D] hover:text-[#5C415D] focus:outline-none "
                         aria-label="Toggle menu"
                     >
                         ☰
@@ -99,11 +99,11 @@ const Header = () => {
 
             {/* Mobile Navigation */}
             {isMenuOpen && (
-                <ul className="md:hidden bg-black px-4 pb-4 space-y-3">
+                <ul className="md:hidden bg-white px-4 pb-4 space-y-3">
                     <li>
                         <Link
                             to="/"
-                            className="block text-gray-300 hover:text-white transition duration-300"
+                            className="block text-[#5C415D] hover:text-yellow-400  transition duration-300"
                             onClick={() => setIsMenuOpen(false)}
                         >
                             Home
@@ -112,7 +112,7 @@ const Header = () => {
                     <li>
                         <Link
                             to="/cart"
-                            className="block text-gray-300 hover:text-white transition duration-300"
+                            className="block text-[#5C415D] hover:text-[#E94F37]  transition duration-300"
                             onClick={() => setIsMenuOpen(false)}
                         >
                             Cart
@@ -124,7 +124,7 @@ const Header = () => {
                                 setIsMenuOpen(false);
                                 handleLoginClick(); // Close menu and navigate
                             }}
-                            className="block text-gray-300 hover:text-white transition duration-300"
+                            className="block text-[#5C415D] hover:text-[#E94F37]  transition duration-300"
                         >
                             {isLoggedIn ? "Profile" : "Login"} {/* Conditionally render text */}
                         </button>
@@ -136,7 +136,7 @@ const Header = () => {
                                     setIsMenuOpen(false);
                                     handleLogout();
                                 }}
-                                className="block text-gray-300 hover:text-white transition duration-300"
+                                className="block text-[#5C415D] hover:text-[#E94F37]  transition duration-300"
                             >
                                 Logout
                             </button>

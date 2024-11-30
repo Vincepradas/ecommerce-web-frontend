@@ -51,7 +51,7 @@ const ProductCard = ({ product }) => {
                             </span>
                         </>
                     ) : (
-                        <span className="text-red-500 font-bold">
+                        <span className="text-[#1F2232] font-bold">
                             PHP {product.price.toFixed(2)}
                         </span>
                     )}
