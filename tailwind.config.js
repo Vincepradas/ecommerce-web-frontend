@@ -5,7 +5,14 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Poppins', 'sans-serif'], // Use Poppins as the default font
+        bubble: ['"Bubblegum Sans"', 'cursive'],
+        fuzzy: ["Fuzzy Bubbles", 'sans-serif',],
+        poppins: ["Poppins", 'serif']// Use Poppins as the default font
+      },
+      fontWeight: {
+        regular: 400, // Normal weight
+        bold: 700,    // Bold weight
+        black: 900,   // Extra heavy
       },
     },
   },

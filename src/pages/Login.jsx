@@ -1,104 +1,57 @@
-import React, { useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import axios from "axios"; // Import axios for making HTTP requests
+import React, { useState, useContext } from 'react';
+import AuthContext from '../context/AuthContext';
 
 const Login = () => {
-    const { login } = useAuth();
-    const [form, setForm] = useState({ email: "", password: "" });
-    const [error, setError] = useState("");
+    const { login } = useContext(AuthContext);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
 
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
-
-    const handleLogin = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        const { email, password } = form;
+        setError('');
 
         try {
-            // Send a POST request to your backend for authentication
-            const response = await axios.post("/api/auth/login", {
-                email,
-                password,
-            });
-
-            // If authentication is successful, store the token and log the user in
-            if (response.data.token) {
-                // Store the token in localStorage
-                localStorage.setItem("authToken", response.data.token);
-
-                // Set the Authorization header for future requests
-                axios.defaults.headers["Authorization"] = `Bearer ${response.data.token}`;
-
-                // Call your login function with the user's email
-                login({ email });
-
-                // Optionally, redirect the user to another page after login
-                window.location.href = "/dashboard";  // Redirect to dashboard or another page
-            } else {
-                setError("Invalid email or password.");
-            }
-        } catch (err) {
-            setError("An error occurred. Please try again.");
-            console.error(err);
+            await login(email, password);
+            window.location.href = '/home';
+        } catch (error) {
+            setError('Login failed. Please check your credentials.');
         }
     };
 
     return (
-        <div className="flex items-center justify-center h-screen bg-gray-100">
-            <div className="bg-white shadow-md rounded-lg p-8 max-w-sm w-full">
-                <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">
-                    Welcome Back
-                </h1>
-                <form onSubmit={handleLogin}>
-                    {error && (
-                        <div className="mb-4 text-red-500 text-sm text-center">
-                            {error}
-                        </div>
-                    )}
+        <div className="min-h-screen flex justify-center items-center bg-gray-100">
+            <div className="bg-white p-8 rounded-lg shadow-md w-full sm:w-96">
+                <h2 className="text-3xl font-bold text-gray-800 text-center mb-6">Login</h2>
+                <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                            Email
-                        </label>
                         <input
                             type="email"
-                            id="email"
-                            name="email"
-                            value={form.email}
-                            onChange={handleChange}
-                            className="mt-1 p-3 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Email"
                             required
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-                    <div className="mb-6">
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                            Password
-                        </label>
+                    <div className="mb-4">
                         <input
                             type="password"
-                            id="password"
-                            name="password"
-                            value={form.password}
-                            onChange={handleChange}
-                            className="mt-1 p-3 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter your password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Password"
                             required
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
+                    {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
                     <button
                         type="submit"
-                        className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition duration-200"
+                        className="w-full py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
                     >
-                        Log In
+                        Login
                     </button>
                 </form>
-                <p className="text-sm text-gray-600 text-center mt-4">
-                    Don't have an account?{" "}
-                    <a href="/register" className="text-blue-600 hover:underline">
-                        Sign up
-                    </a>
-                </p>
             </div>
         </div>
     );
