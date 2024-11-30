@@ -7,7 +7,8 @@ module.exports = {
       fontFamily: {
         bubble: ['"Bubblegum Sans"', 'cursive'],
         fuzzy: ["Fuzzy Bubbles", 'sans-serif',],
-        poppins: ["Poppins", 'serif']// Use Poppins as the default font
+        poppins: ["Poppins", 'serif'],
+        lato: ["Lato", 'sans-serif']// Use Poppins as the default font
       },
       fontWeight: {
         regular: 400, // Normal weight

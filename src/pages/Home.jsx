@@ -57,7 +57,7 @@ const Home = () => {
                             }`}
                             onClick={() => setFilter(null)}
                         >
-                            All
+                            Home
                         </button>
                         {categories.map((category) => (
                             <button
