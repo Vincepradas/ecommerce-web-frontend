@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -6,21 +6,13 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const API_URL = "https://ecomwebapi-gsbbgmgbfubhc8hk.canadacentral-01.azurewebsites.net";  // Replace this with your actual API URL
-
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            setUser({ token });
-        }
-        setLoading(false);
-    }, []);
+    const API_URL = "https://ecomwebapi-gsbbgmgbfubhc8hk.canadacentral-01.azurewebsites.net";
 
     const login = async (email, password) => {
         try {
             const response = await axios.post(`${API_URL}/api/auth/login`, { email, password });
-            const { token } = response.data;
-            localStorage.setItem('token', token);
+            const { token } = response.data; // Assuming the backend sends both token and user data
+            localStorage.setItem('authToken', token);
             setUser({ token });
         } catch (error) {
             console.error('Login failed:', error);
