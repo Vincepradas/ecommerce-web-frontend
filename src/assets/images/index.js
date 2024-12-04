@@ -1,4 +1,4 @@
 import banner from './banner.png';
 import slash from './slash.png';
-
-export default { banner, slash};
+import bannerDesktop from './banner-desktop.png';
+export default { banner, slash,bannerDesktop };

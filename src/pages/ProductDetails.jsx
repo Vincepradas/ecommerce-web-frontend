@@ -11,13 +11,14 @@
     import Skeleton from "react-loading-skeleton"; // Importing the skeleton loader
     import 'react-loading-skeleton/dist/skeleton.css'; // Importing skeleton styles
     import { motion } from "framer-motion"; // Importing framer-motion for animations
+    import "../style/ProductDetails.css";
 
     const ProductDetails = () => {
         const { id } = useParams();
         const [isModalOpen, setIsModalOpen] = useState(false);
         const [product, setProduct] = useState({});
         const [loading, setLoading] = useState(true);
-        const swiperRef = useRef(null);
+        const swiperRef  = useRef(null);
 
         const isAuthenticated = !!localStorage.getItem("authToken");
 
@@ -51,20 +52,20 @@
         };
 
         return (
-            <div className="product-details container mx-auto px-4 py-6 md:px-6 md:py-12 font-lato">
-                <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+            <div className="product-details container mx-auto px-4 py-6 md:px-6 md:py-12 font-slick">
+                <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}/>
 
                 <div className="flex flex-col md:flex-row gap-6 items-start md:items-center mb-8">
                     {/* Image Section */}
                     <div className="w-full md:w-1/2">
                         {loading ? (
-                            <Skeleton height={400} className="rounded-lg" />
+                            <Skeleton height={400} className="rounded-lg"/>
                         ) : product.media?.length > 0 ? (
                             <Swiper
                                 spaceBetween={10}
                                 slidesPerView={1}
                                 navigation
-                                pagination={{ clickable: true }}
+                                pagination={{clickable: true}}
                                 modules={[Navigation, Pagination]}
                                 ref={swiperRef}
                             >
@@ -78,6 +79,7 @@
                                     </SwiperSlide>
                                 ))}
                             </Swiper>
+
                         ) : (
                             <p>No media available for this product.</p>
                         )}
@@ -87,12 +89,12 @@
                     <div className="w-full md:w-1/2">
                         {loading ? (
                             <>
-                                <Skeleton height={30} width="80%" className="mb-2" />
-                                <Skeleton count={3} height={20} className="mb-4" />
-                                <Skeleton height={20} width="60%" className="mb-4" />
+                                <Skeleton height={30} width="80%" className="mb-2"/>
+                                <Skeleton count={3} height={20} className="mb-4"/>
+                                <Skeleton height={20} width="60%" className="mb-4"/>
                             </>
                         ) : (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+                            <motion.div initial={{opacity: 0}} animate={{opacity: 1}} transition={{duration: 0.5}}>
                                 <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-2">
                                     {product.name}
                                 </h1>
@@ -112,8 +114,8 @@
                                     ))}
                                 </p>
 
-                                <p className="text-base md:text-lg text-gray-600 mb-4">
-                                    <span className="font-bold">Discount:</span> {product.discountPercentage}%
+                                <p className="text-base md:text-lg text-gray-600 mb-4 font-bold">
+                                    {product.discountPercentage}% Off
                                 </p>
 
                                 <div className="flex items-center space-x-2">
@@ -125,7 +127,7 @@
                                             />
                                         ))}
                                     </span>
-                                    <span className="text-gray-500">{product.rating}/5</span>
+                                    <span className="text-gray-500">{product.rating} ({product.reviews.length})</span>
                                 </div>
 
                                 {/* Price Section */}
@@ -159,9 +161,37 @@
                         )}
                     </div>
                 </div>
-
+                <div className="flex border rounded-lg border-gray-300">
+                    <div className="w-full max-w-md m-4 p-4 rounded-lg border border-gray-300">
+                        <div className="flex flex-col mb-6 ">
+                            <h1 className="text-2xl font-bold mb-3  text-gray-800">Coupon</h1>
+                            <input
+                                type="text"
+                                placeholder="Coupon Pin"
+                                className="border p-3 rounded-md border-gray-300 md:w-full focus:outline-none focus:ring-2 focus:ring-black transition duration-200"
+                            />
+                            <button
+                                className="bg-black text-white  font-bold text-lg py-2 px-6 rounded-full transition duration-200 hover:bg-gray-800 mt-2">
+                                Apply
+                            </button>
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold my-4 text-gray-800">Address</h1>
+                            <select
+                                className="border p-3 rounded-md border-gray-300 text-gray-700 md:w-full bg-white focus:outline-none focus:ring-2 focus:ring-black transition duration-200"
+                            >
+                                <option value="" disabled selected>
+                                    Set your address
+                                </option>
+                                <option value="address1">Address 1</option>
+                                <option value="address2">Address 2</option>
+                                <option value="newAddress">Add New Address</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
                 {/* Reviews Section */}
-                <Reviews productId={id} />
+                <Reviews productId={id}/>
             </div>
         );
     };

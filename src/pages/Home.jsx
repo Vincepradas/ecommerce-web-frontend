@@ -8,7 +8,7 @@ import config from "../config";
 import images from '../assets/images';
 
 const Home = () => {
-    const {banner, slash} = images;
+    const {banner, slash, bannerDesktop} = images;
     const {data: products, loading} = useFetch(`${config.API_URL}/products`);
     const [filter, setFilter] = useState(null);
 
@@ -19,19 +19,28 @@ const Home = () => {
     const categories = [...new Set(products?.map((product) => product.category))];
 
     return (
-        <div className="home bg-white py-6">
-            <div className="container mx-auto mt-2 px-4 md:px-8">
+        <div className="home bg-white py-2">
+            <div className="container mx-auto mt-1 px-4 md:px-8">
 
                 {/* Banner Section */}
-                <div className="mb-8 flex justify-center">
-                    <div className="relative w-full sm:w-fit rounded-lg overflow-hidden">
+                <div className="mb-8">
+                    <div className="relative -mx-4 md:-mx-8">
+                        {/* Mobile Banner */}
                         <img
                             src={banner}
-                            alt="Banner"
-                            className="w-full h-full sm:h-64 md:h-80 lg:h-[400px] object-cover border rounded-lg"
+                            alt="Mobile Banner"
+                            className="w-full h-full sm:h-64 md:hidden object-cover"
+                        />
+
+                        {/* Desktop Banner */}
+                        <img
+                            src={bannerDesktop}
+                            alt="Desktop Banner"
+                            className="hidden md:block w-full h-full sm:h-64 md:h-80 lg:h-[400px] object-cover"
                         />
                     </div>
                 </div>
+
 
                 {/* Welcome Section */}
                 <h2 className="font-fuzzy font-black text-3xl md:text-4xl text-[#1F2232] text-center mb-6">
@@ -48,12 +57,12 @@ const Home = () => {
 
                 {/* Category Filter Buttons */}
                 <div className="mb-6 overflow-x-auto">
-                <div className="flex gap-4 justify-start items-center">
+                    <div className="flex gap-4 justify-start items-center font-slick">
                         <button
-                            className={`px-6 py-2 rounded-lg transition ${
+                            className={`px-6 py-2 transition hover:border-b-2 hover:border-[#FF6F00] ${
                                 !filter
-                                    ? "bg-[#1F2232] text-white shadow-md"
-                                    : "bg-gray-100 text-gray-700 border"
+                                    ? "border-b-2 border-[#FF6F00] text-gray-700 font-bold"
+                                    : " text-gray-700"
                             }`}
                             onClick={() => setFilter(null)}
                         >
@@ -62,10 +71,10 @@ const Home = () => {
                         {categories.map((category) => (
                             <button
                                 key={category}
-                                className={`px-6 py-2 rounded-lg transition ${
+                                className={`px-6 py-2  transition hover:border-b-2 hover:border-[#FF6F00] ${
                                     filter === category
-                                        ? "bg-[#1F2232] text-white shadow-md"
-                                        : "bg-gray-100 text-gray-700 border"
+                                        ? "border-b-2 border-[#FF6F00] font-bold text-gray-700 "
+                                        : " text-gray-700"
                                 }`}
                                 onClick={() => setFilter(category)}
                             >

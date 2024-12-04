@@ -5,6 +5,7 @@ const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSearchVisible, setIsSearchVisible] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isHeaderVisible, setIsHeaderVisible] = useState(true);
     const navigate = useNavigate();
 
     const checkIfLoggedIn = () => localStorage.getItem("authToken") !== null;
@@ -38,11 +39,32 @@ const Header = () => {
         }
     };
 
+    // Scroll event listener
+    useEffect(() => {
+        let lastScrollY = window.scrollY;
+
+        const handleScroll = () => {
+            if (window.scrollY > lastScrollY) {
+                // Scrolling down
+                setIsHeaderVisible(false);
+            } else {
+                // Scrolling up
+                setIsHeaderVisible(true);
+            }
+            lastScrollY = window.scrollY;
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+        };
+    }, []);
+
     return (
-        <header className="bg-white font-fuzzy sticky top-0 z-50">
+        <header className={`bg-white font-slick sticky top-0 z-50 transition-transform duration-300 ${isHeaderVisible ? "translate-y-0" : "-translate-y-full"}`}>
             <nav className="container mx-auto px-4 py-3 flex items-center justify-between">
                 <div className="text-2xl font-bold">
-                    <Link to="/" className="text-[#FF6F00] hover:text-[#451F55] transition duration-300">
+                    <Link to="/" className="text-[#FF6F00] font-fuzzy hover:text-[#451F55] transition duration-300">
                         Sandra's
                     </Link>
                 </div>
@@ -71,7 +93,7 @@ const Header = () => {
                         >
                             <img width="25" height="25"
                                  src="https://img.icons8.com/fluency-systems-regular/50/search--v1.png"
-                                 alt="search--v1"/>
+                                 alt="search--v v1"/>
                         </button>
                         {isSearchVisible && (
                             <div className="absolute top-12 right-0 bg-white border border-gray-300 rounded-md shadow-lg p-4 w-full md:w-64 z-10">
@@ -102,7 +124,7 @@ const Header = () => {
                     {isLoggedIn && (
                         <li className="flex items-center">
                             <button onClick={handleLogout}
-                                    className="text-[#5C415D] hover:text-[#FF6F 00] transition duration-300"
+                                    className="text-[#5C415D] hover:text-[#FF6F00] transition duration-300"
                             >
                                 Logout
                             </button>
@@ -143,7 +165,7 @@ const Header = () => {
             </nav>
 
             {isSearchVisible && (
-                <div className="absolute top-12 right-0 bg-white border border-gray-300 rounded-md shadow-lg p-4 w-full z-10">
+                <div className="absolute top-12 right-0 bg-white border border-gray-300 shadow-lg p-4 w-full z-10">
                     <form onSubmit={handleSearch} className="flex items-center">
                         <input
                             type="text"
@@ -182,7 +204,7 @@ const Header = () => {
                     <li>
                         <Link
                             to="/cart"
-                            className="block text-[#5C415D] hover:text-[#FF6F00] transition duration-300"
+                            className="block text-[#5C415D] hover:text-[#FF6F00] transition duration -300"
                             onClick={() => setIsMenuOpen(false)}
                         >
                             Cart

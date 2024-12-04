@@ -1,0 +1,20 @@
+/* Custom Swiper Navigation Buttons */
+.swiper-button-next,
+.swiper-button-prev {
+    color: #4b5563; /* Set to gray */
+}
+
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+    color: #000; /* Change to black on hover */
+}
+
+/* Custom Swiper Pagination Bullets */
+.swiper-pagination-bullet {
+    background-color: #4b5563; /* Set to gray */
+    opacity: 1;
+}
+
+.swiper-pagination-bullet-active {
+    background-color: #000; /* Set to black for the active bullet */
+}
