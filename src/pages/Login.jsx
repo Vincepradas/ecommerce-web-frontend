@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import AuthContext from "../context/AuthContext";
 import { Input, Typography, Checkbox } from "@material-tailwind/react";
-
+import { Link } from "react-router-dom";
 const Login = () => {
   const { login } = useContext(AuthContext);
   const [email, setEmail] = useState("");
@@ -105,9 +105,12 @@ const Login = () => {
         {/* Sign Up Link */}
         <p className="text-center text-sm mt-4 text-gray-600">
           Don’t have an account?{" "}
-          <a href="/signup" className="text-blue-500 font-medium">
-            Sign up
-          </a>
+          <Link
+            to="/signup"
+            className="font-medium text-blue-600 hover:underline"
+          >
+            Sign Up
+          </Link>
         </p>
       </div>
     </div>

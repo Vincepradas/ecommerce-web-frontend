@@ -6,6 +6,7 @@ import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
+import Signup from "./pages/SignUp";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { Route, Routes } from "react-router-dom";
@@ -21,6 +22,7 @@ const App = () => {
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
           </Routes>
           <Footer />
         </div>

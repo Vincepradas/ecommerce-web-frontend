@@ -19,6 +19,26 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const customerSignup = async (name, email, password) => {
+        try {
+            const response = await axios.post(`${API_URL}/api/auth/customer/register/`, { name, email, password });
+            return response.data; // Success message or additional data
+        } catch (error) {
+            console.error('Signup failed:', error);
+            throw error.response?.data?.message || 'Signup failed. Try again.';
+        }
+    }
+    
+    const adminSignup = async (name, email, password) => {
+        try {
+            const response = await axios.post(`${API_URL}/api/auth/admin/register/`, { name, email, password });
+            return response.data; // Success message or additional data
+        } catch (error) {
+            console.error('Signup failed:', error);
+            throw error.response?.data?.message || 'Signup failed. Try again.';
+        }
+    }
+
     const logout = () => {
         localStorage.removeItem('token');
         setUser(null);
