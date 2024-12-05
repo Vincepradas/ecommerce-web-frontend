@@ -49,34 +49,37 @@ const Reviews = ({ productId }) => {
         }
 
         fetch(`${API_URL}/api/products/${productId}/reviews`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`,
-            },
-            body: JSON.stringify({ comment: newReview.trim(), rating }),
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ comment: newReview.trim(), rating }),
         })
-            .then((res) => {
-                if (!res.ok) {
-                    throw new Error("Failed to submit review.");
-                }
-                return res.json();
-            })
-            .then((data) => {
-                // Directly add the new review to the current state
-                setReviews((prevReviews) => [...prevReviews, {
-                    reviewerName: user?.name || reviewerName,
-                    rating,
-                    comment: newReview.trim(),
-                }]);
-                setNewReview("");
-                setRating(0);
-                alert("Review submitted successfully!");
-            })
-            .catch((error) => {
-                console.error("Error submitting review:", error);
-                alert("Failed to submit review. Please try again later.");
-            });
+          .then((res) => {
+            if (!res.ok) {
+              throw new Error("Failed to submit review.");
+            }
+            return res.json();
+          })
+          .then((data) => {
+            // Directly add the new review to the current state
+            setReviews((prevReviews) => [
+              ...prevReviews,
+              {
+                reviewerName: user?.name || reviewerName,
+                rating,
+                comment: newReview.trim(),
+              },
+            ]);
+            setNewReview("");
+            setRating(0);
+            alert("Review submitted successfully!");
+          })
+          .catch((error) => {
+            console.error("Error submitting review:", error);
+            alert("Failed to submit review. Please try again later.");
+          });
     };
 
     useEffect(() => {

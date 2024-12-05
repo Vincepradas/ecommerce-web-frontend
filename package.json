@@ -4,6 +4,7 @@
   "private": true,
   "proxy": "https://ecomwebapi-gsbbgmgbfubhc8hk.canadacentral-01.azurewebsites.net",
   "dependencies": {
+    "@material-tailwind/react": "^2.1.10",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -11,6 +12,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "framer-motion": "^11.11.17",
+    "iconoir-react": "^7.10.1",
     "prop-types": "^15.8.1",
     "react": "^18.3.1",
     "react-confirm": "^0.3.0-7",
@@ -55,5 +57,9 @@
     "gh-pages": "^6.2.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15"
+  },
+  "overrides": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   }
 }
