@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Modal from "../components/LoginModal";
 import { PrimaryButton, SecondaryButton } from "../components/Button";
 import config from "../config";
@@ -8,9 +8,9 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/swiper-bundle.css";
 import { Navigation, Pagination } from "swiper";
 import Reviews from "../components/Reviews";
-import Skeleton from "react-loading-skeleton"; // Importing the skeleton loader
-import "react-loading-skeleton/dist/skeleton.css"; // Importing skeleton styles
-import { motion } from "framer-motion"; // Importing framer-motion for animations
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
+import { motion } from "framer-motion";
 import "../style/ProductDetails.css";
 
 const ProductDetails = () => {
@@ -18,8 +18,9 @@ const ProductDetails = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [product, setProduct] = useState({});
   const [loading, setLoading] = useState(true);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const swiperRef = useRef(null);
-
+  const navigate = useNavigate();
   const isAuthenticated = !!localStorage.getItem("authToken");
 
   useEffect(() => {
@@ -43,6 +44,7 @@ const ProductDetails = () => {
     new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "PHP",
+      minimumFractionDigits: 0,
     }).format(price);
 
   const handleAction = (action) => {
@@ -53,12 +55,19 @@ const ProductDetails = () => {
     }
   };
 
+  const handleCheckout = () => {
+    setShowCheckoutModal(true);
+  };
+
+  const handleCloseCheckout = () => {
+    setShowCheckoutModal(false);
+  };
+
   return (
     <div className="product-details container mx-auto px-4 py-6 md:px-6 md:py-12 font-slick">
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
       <div className="flex flex-col md:flex-row gap-6 items-start md:items-center mb-8">
-        {/* Image Section */}
         <div className="w-full md:w-1/2">
           {loading ? (
             <Skeleton height={400} className="rounded-lg" />
@@ -86,7 +95,6 @@ const ProductDetails = () => {
           )}
         </div>
 
-        {/* Product Details */}
         <div className="w-full md:w-1/2">
           {loading ? (
             <>
@@ -121,7 +129,7 @@ const ProductDetails = () => {
                 ))}
               </p>
               <p className="text-base md:text-lg text-gray-600 mb-4 font-bold">
-                {product.discountPercentage}% Off
+                Save {product.discountPercentage}% Off
               </p>
               <div className="flex items-center space-x-2">
                 <span className="flex space-x-1">
@@ -129,7 +137,9 @@ const ProductDetails = () => {
                     <FaStar
                       key={i}
                       className={
-                        i < product.rating ? "text-yellow-500" : "text-gray-300"
+                        i < product.rating
+                          ? "text-yellow-500"
+                          : "text-gray-300"
                       }
                     />
                   ))}
@@ -139,33 +149,31 @@ const ProductDetails = () => {
                 </span>
               </div>
 
-              {/* Price Section */}
               <div className="mt-4">
                 {discountedPrice ? (
                   <>
                     <p className="text-lg md:text-xl text-gray-500 line-through">
                       {formatPrice(product.price)}
                     </p>
-                    <p className="text-lg md:text-2xl font-bold text-green-600">
+                    <p className="text-2xl md:text-2xl font-bold text-green-600">
                       {formatPrice(discountedPrice)}
                     </p>
                   </>
                 ) : (
-                  <p className="text-lg md:text-2xl font-bold text-[#1F2232]">
+                  <p className="text-2xl md:text-2xl font-bold text-[#1F2232]">
                     {formatPrice(product.price)}
                   </p>
                 )}
               </div>
 
-              {/* Buttons */}
               <div className="mt-6 flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
-                <PrimaryButton
-                  onClick={() => handleAction(() => alert("Proceed to Buy"))}
-                >
-                  Buy Now
-                </PrimaryButton>
+                <PrimaryButton onClick={handleCheckout}>Buy Now</PrimaryButton>
                 <SecondaryButton
-                  onClick={() => handleAction(() => alert("Added to Cart"))}
+                  onClick={() =>
+                    handleAction(() => {
+                      alert("Added to Cart");
+                    })
+                  }
                 >
                   Add to Cart
                 </SecondaryButton>
@@ -175,7 +183,6 @@ const ProductDetails = () => {
         </div>
       </div>
 
-      {/* Coupon and Address Section */}
       <div className="flex border rounded-lg border-gray-300">
         <div className="w-full max-w-md m-4 p-4 rounded-lg border border-gray-300">
           <div className="flex flex-col mb-6">
@@ -203,8 +210,55 @@ const ProductDetails = () => {
         </div>
       </div>
 
-      {/* Reviews Section */}
       <Reviews productId={id} />
+
+      {showCheckoutModal && (
+        <CheckoutModal onClose={handleCloseCheckout} product={product} />
+      )}
+    </div>
+  );
+};
+
+// Checkout Modal Component
+const CheckoutModal = ({ onClose, product }) => {
+  const formatPrice = (price) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "PHP",
+      minimumFractionDigits: 0,
+    }).format(price);
+
+  const handleCheckout = () => {
+    alert("Checkout process started!");
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-700 bg-opacity-50 backdrop-blur-sm font-poppins">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-100 mx-2">
+        <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
+          Checkout {product.name} ?
+        </h2>
+        <p className="text-center mb-4 text-gray-600 font-slick">
+          <span className="font-semibold">Total: </span>
+          {formatPrice(product.price)}
+        </p>
+
+        <div className="flex justify-center gap-4">
+          <button
+            className="bg-black text-white font-semi py-2 px-4 rounded-md hover:bg-[#FF6F00]"
+            onClick={handleCheckout}
+          >
+            Proceed
+          </button>
+          <button
+            className="bg-gray-300 text-black font-semi py-2 px-4 rounded-md hover:bg-gray-400"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

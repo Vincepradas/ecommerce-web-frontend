@@ -14,7 +14,12 @@ const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    setIsModalOpen(true);
+    // Check if the modal has been shown before
+    const hasSeenModal = localStorage.getItem("hasSeenModal");
+    if (!hasSeenModal) {
+      setIsModalOpen(true);
+      localStorage.setItem("hasSeenModal", "true"); // Set the flag
+    }
   }, []);
 
   const filteredProducts = products?.filter((product) =>
@@ -46,11 +51,11 @@ const Home = () => {
         </div>
 
         {/* Welcome Section */}
-        <h2 className="font-fuzzy font-black text-3xl md:text-4xl text-[#1F2232] text-center mb-6">
+        <h2 className="font-fuzzy font-black text-3xl md:text-4xl text-[#1F2232] text-center mb-4">
           Welcome to <span className="text-[#FF6F00]">Sandra's</span>
           <br />
           <span className="relative inline-block">
-            <span className="font-normal text-sm text-gray-600 mt-2 block font-poppins">
+            <span className="font-normal text-sm text-gray-600 mt-2 block font-poppins italic">
               <span className="font-bold">Note:</span> Delivery is currently
               available only within
               <span className="font-bold"> Cantilan - Madrid</span>. Kindly
@@ -65,7 +70,7 @@ const Home = () => {
             <button
               className={`px-6 py-2 transition hover:border-b-2 hover:border-[#FF6F00] ${
                 !filter
-                  ? "border-b-2 border-[#FF6F00] text-gray-700 font-bold"
+                  ? "border-b-2 border-[#FF6F00] text-[#FF6F00] font-bold"
                   : " text-gray-700"
               }`}
               onClick={() => setFilter(null)}
@@ -77,7 +82,7 @@ const Home = () => {
                 key={category}
                 className={`px-6 py-2  transition hover:border-b-2 hover:border-[#FF6F00] ${
                   filter === category
-                    ? "border-b-2 border-[#FF6F00] font-bold text-gray-700 "
+                    ? "border-b-2 transition border-[#FF6F00] font-bold text-[#FF6F00]"
                     : " text-gray-700"
                 }`}
                 onClick={() => setFilter(category)}
@@ -136,7 +141,8 @@ const SimpleModal = ({ isOpen, onClose }) => {
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-700 bg-opacity-50 backdrop-blur-sm font-slick">
       <div className="bg-white p-6 rounded-lg shadow-lg w-100 mx-2">
         <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
-          Welcome to <span className="font-fuzzy text-[#FF6F00]"> Sandra's!</span>
+          Welcome to{" "}
+          <span className="font-fuzzy text-[#FF6F00]"> Sandra's!</span>
         </h2>
         <p className="text-center mb-4 text-gray-600">
           🎉 Enjoy an exclusive{" "}

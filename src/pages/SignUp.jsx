@@ -1,6 +1,7 @@
 import React, { useContext, useState } from "react";
 import AuthContext from "../context/AuthContext";
 import { Typography } from "@material-tailwind/react";
+import { Link } from "react-router-dom";
 
 const Signup = () => {
   // Extract the signup function from context
@@ -38,7 +39,11 @@ const Signup = () => {
     <div className="min-h-screen flex justify-center font-poppins">
       <div className="bg-white p-8 w-full sm:w-[400px]">
         {/* Heading */}
-        <Typography variant="h4" color="blue-gray" className="font-poppins py-2">
+        <Typography
+          variant="h4"
+          color="blue-gray"
+          className="font-poppins py-2"
+        >
           Customer Registration
         </Typography>
         <Typography className="text-gray-600 mb-6" variant="small">
@@ -51,7 +56,9 @@ const Signup = () => {
           {message && (
             <div
               className={`mb-4 text-sm text-center ${
-                message.includes("successful") ? "text-green-500" : "text-red-500"
+                message.includes("successful")
+                  ? "text-green-500"
+                  : "text-red-500"
               }`}
             >
               {message}
@@ -77,7 +84,10 @@ const Signup = () => {
 
           {/* Email Field */}
           <div className="mb-4">
-            <label htmlFor="email" className="text-gray-700 text-sm font-medium">
+            <label
+              htmlFor="email"
+              className="text-gray-700 text-sm font-medium"
+            >
               Your Email
             </label>
             <input
@@ -94,7 +104,10 @@ const Signup = () => {
 
           {/* Password Field */}
           <div className="mb-4">
-            <label htmlFor="password" className="text-gray-700 text-sm font-medium">
+            <label
+              htmlFor="password"
+              className="text-gray-700 text-sm font-medium"
+            >
               Your Password
             </label>
             <input
@@ -114,7 +127,9 @@ const Signup = () => {
             type="submit"
             disabled={loading}
             className={`w-full py-2 rounded-lg text-white font-bold focus:ring-2 ${
-              loading ? "bg-gray-500 cursor-not-allowed" : "bg-gray-800 hover:bg-gray-700"
+              loading
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-gray-800 hover:bg-gray-700"
             }`}
           >
             {loading ? "Signing up..." : "Sign up"}
@@ -124,9 +139,14 @@ const Signup = () => {
         {/* Login Redirect */}
         <p className="text-sm text-gray-600 text-center mt-4">
           Already have an account?{" "}
-          <a href="/login" className="text-blue-600 hover:underline font-semibold">
-            Log in
-          </a>
+          <Link to={"/login"}>
+            <p
+              href="/login"
+              className="text-blue-600 hover:underline font-semibold"
+            >
+              Log in
+            </p>
+          </Link>
         </p>
       </div>
     </div>
