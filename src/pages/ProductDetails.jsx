@@ -14,14 +14,15 @@ import { motion } from "framer-motion";
 import "../style/ProductDetails.css";
 
 const ProductDetails = () => {
+  let [quantity, setQuantity] = useState(1);
   const { id } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [product, setProduct] = useState({});
   const [loading, setLoading] = useState(true);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const swiperRef = useRef(null);
-  const navigate = useNavigate();
   const isAuthenticated = !!localStorage.getItem("authToken");
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch(`${config.API_URL}/products/${id}`)
@@ -63,6 +64,81 @@ const ProductDetails = () => {
     setShowCheckoutModal(false);
   };
 
+  const handleQuantity = (action) => {
+    setQuantity((quantity) => {
+      if (action === "increment") {
+        return quantity + 1;
+      } else if (action === "decrement") {
+        return quantity > 1 ? quantity - 1 : 1;
+      }
+      return quantity;
+    });
+  };
+
+  // Checkout Modal Component
+  const CheckoutModal = ({ onClose, product }) => {
+    const formatPrice = (price) =>
+      new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "PHP",
+        minimumFractionDigits: 0,
+      }).format(price);
+
+    const handleCheckout = () => {
+      alert("Redirecting to checkout page...");
+      navigate("/checkout");
+      onClose();
+    };
+    const discountedPrice = useMemo(() => {
+      if (product.discountPercentage) {
+        return product.price * (1 - product.discountPercentage / 100);
+      }
+      return null;
+    }, [product.price, product.discountPercentage]);
+
+    const totalPrice = discountedPrice
+      ? discountedPrice * quantity
+      : product.price * quantity;
+
+    return (
+      <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-700 bg-opacity-50 backdrop-blur-sm font-poppins">
+        <div className="bg-white p-6 rounded-lg shadow-lg w-100 mx-2">
+          <h2 className="text-2xl font-semibold mb-4 text-center text-gray-800">
+            Checkout {product.name} ?
+          </h2>
+
+          <div className="text-center font-slick mb-2">
+            {discountedPrice ? (
+              <>
+                <p className="text-2xl md:text-2xl font-bold text-[#1F2232]">
+                  {formatPrice(totalPrice)}
+                </p>
+              </>
+            ) : (
+              <p className="text-2xl md:text-2xl font-bold text-[#1F2232]">
+                {formatPrice(totalPrice)}
+              </p>
+            )}
+          </div>
+
+          <div className="flex justify-center gap-4">
+            <button
+              className="bg-black text-white font-semi py-2 px-4 rounded-md hover:bg-[#FF6F00]"
+              onClick={handleCheckout}
+            >
+              Proceed
+            </button>
+            <button
+              className="bg-gray-300 text-black font-semi py-2 px-4 rounded-md hover:bg-gray-400"
+              onClick={onClose}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
   return (
     <div className="product-details container mx-auto px-4 py-6 md:px-6 md:py-12 font-slick">
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
@@ -137,9 +213,7 @@ const ProductDetails = () => {
                     <FaStar
                       key={i}
                       className={
-                        i < product.rating
-                          ? "text-yellow-500"
-                          : "text-gray-300"
+                        i < product.rating ? "text-yellow-500" : "text-gray-300"
                       }
                     />
                   ))}
@@ -149,25 +223,58 @@ const ProductDetails = () => {
                 </span>
               </div>
 
-              <div className="mt-4">
-                {discountedPrice ? (
-                  <>
-                    <p className="text-lg md:text-xl text-gray-500 line-through">
+              <div className="mt-4 flex justify-between">
+                <div>
+                  {discountedPrice ? (
+                    <>
+                      <p className="text-lg md:text-xl text-gray-500 line-through">
+                        {formatPrice(product.price)}
+                      </p>
+                      <p className="text-2xl md:text-2xl font-bold text-green-600">
+                        {formatPrice(discountedPrice)}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-2xl md:text-2xl font-bold text-[#1F2232]">
                       {formatPrice(product.price)}
                     </p>
-                    <p className="text-2xl md:text-2xl font-bold text-green-600">
-                      {formatPrice(discountedPrice)}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-2xl md:text-2xl font-bold text-[#1F2232]">
-                    {formatPrice(product.price)}
-                  </p>
-                )}
+                  )}
+                </div>
+
+                <div className="h-fit flex items-center justify-center col-auto space-x-2 md:text-lg text-md w-fit">
+                  <button
+                    className="px-3 rounded-lg font-poppins bg-black text-white hover:bg-[#FF6F00]"
+                    onClick={() => handleQuantity("decrement")}
+                  >
+                    -
+                  </button>
+                  <div className="flex items-center justify-center">
+                    <input
+                      type="number"
+                      disabled
+                      value={quantity}
+                      className="text-center w-10 rounded-lg bg-gray-200 border-2 border-black"
+                    />
+                  </div>
+                  <button
+                    className="px-3 rounded-lg font-poppins bg-black text-white hover:bg-[#FF6F00]"
+                    onClick={() => handleQuantity("increment")}
+                  >
+                    +
+                  </button>
+                </div>
               </div>
 
-              <div className="mt-6 flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
-                <PrimaryButton onClick={handleCheckout}>Buy Now</PrimaryButton>
+              <div className="font-poppins mt-6 flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+                <PrimaryButton
+                  onClick={() => {
+                    handleAction(() => {
+                      handleCheckout();
+                    });
+                  }}
+                >
+                  Buy Now 
+                </PrimaryButton>
                 <SecondaryButton
                   onClick={() =>
                     handleAction(() => {
@@ -192,13 +299,19 @@ const ProductDetails = () => {
               placeholder="Coupon Pin"
               className="border p-3 rounded-md border-gray-300 md:w-full focus:outline-none focus:ring-2 focus:ring-black transition duration-200"
             />
-            <button className="bg-black text-white font-bold text-lg py-2 px-6 rounded-full transition duration-200 hover:bg-gray-800 mt-2">
+            <button 
+            className="bg-black text-white font-bold text-lg py-2 px-6 rounded-full transition duration-200 hover:bg-gray-800 mt-2"
+            onClick={() =>
+              handleAction(() => {
+              })
+            }
+            >
               Apply
             </button>
           </div>
           <div>
             <h1 className="text-2xl font-bold my-4 text-gray-800">Address</h1>
-            <select className="border p-3 rounded-md border-gray-300 text-gray-700 md:w-full bg-white focus:outline-none focus:ring-2 focus:ring-black transition duration-200">
+            <select className="border p-3 rounded-md border-gray-300 text-gray-700 w-full bg-white focus:outline-none focus:ring-2 focus:ring-black transition duration-200">
               <option value="" disabled selected>
                 Set your address
               </option>
@@ -215,50 +328,6 @@ const ProductDetails = () => {
       {showCheckoutModal && (
         <CheckoutModal onClose={handleCloseCheckout} product={product} />
       )}
-    </div>
-  );
-};
-
-// Checkout Modal Component
-const CheckoutModal = ({ onClose, product }) => {
-  const formatPrice = (price) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "PHP",
-      minimumFractionDigits: 0,
-    }).format(price);
-
-  const handleCheckout = () => {
-    alert("Checkout process started!");
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-700 bg-opacity-50 backdrop-blur-sm font-poppins">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-100 mx-2">
-        <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
-          Checkout {product.name} ?
-        </h2>
-        <p className="text-center mb-4 text-gray-600 font-slick">
-          <span className="font-semibold">Total: </span>
-          {formatPrice(product.price)}
-        </p>
-
-        <div className="flex justify-center gap-4">
-          <button
-            className="bg-black text-white font-semi py-2 px-4 rounded-md hover:bg-[#FF6F00]"
-            onClick={handleCheckout}
-          >
-            Proceed
-          </button>
-          <button
-            className="bg-gray-300 text-black font-semi py-2 px-4 rounded-md hover:bg-gray-400"
-            onClick={onClose}
-          >
-            Close
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

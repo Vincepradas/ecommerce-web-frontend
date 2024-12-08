@@ -105,10 +105,10 @@ const ProductCard = ({ product }) => {
             </span>
           )}
         </div>
-        <div className="flex justify-end font-poppins   w-full">
+        <div className="flex justify-end font-poppins w-full">
             <CustomButton
               title="View"
-              css="transition hover:border-1 hover:border-gray-400 bg-[#FF6F00] text-white hover:bg-white hover:text-[#FF6F00]"
+              css="transition hover:border-[1px] hover:border-gray-400 bg-[#FF6F00] text-white hover:bg-white hover:text-[#FF6F00]"
               link={`/products/${product._id}`}
             />
         </div>
@@ -121,7 +121,7 @@ const CustomButton = ({ title, css, link }) => {
   return (
     <Link to={link}>
       <button
-        className={`border rounded-full ${css} font-semibold w-[140px] h-[40px] flex items-center justify-center mx-1`}
+        className={`rounded-full ${css} font-semibold w-[140px] h-[40px] flex items-center justify-center mx-1`}
       >
         {title}
       </button>
