@@ -8,12 +8,25 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const API_URL = "https://ecomwebapi-gsbbgmgbfubhc8hk.canadacentral-01.azurewebsites.net";
 
+    // Function to decode JWT token and extract user ID
+    const decodeToken = (token) => {
+        const decoded = token ? JSON.parse(atob(token.split('.')[1])) : null;
+        return decoded ? decoded.userId : null;
+    };
+
     const login = async (email, password) => {
         try {
             const response = await axios.post(`${API_URL}/api/auth/login`, { email, password });
-            const { token } = response.data; 
+            console.log(response.data);
+            const { token } = response.data;
+            const userId = decodeToken(token); // Extract userId from token
+
+            // Save token and userId to localStorage
             localStorage.setItem('authToken', token);
-            setUser({ token });
+            localStorage.setItem('userId', userId);
+
+            // Update user state with userId and token
+            setUser({ token, userId });
         } catch (error) {
             console.error('Login failed:', error);
         }
@@ -40,7 +53,8 @@ export const AuthProvider = ({ children }) => {
     }
 
     const logout = () => {
-        localStorage.removeItem('token');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userId');
         setUser(null);
     };
 

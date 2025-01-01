@@ -1,24 +1,23 @@
 import React, { useState, useEffect, useContext } from "react";
 import AuthContext from "../context/AuthContext";
-const { useParams } = require("react-router-dom");
 
 const StepIndicator = ({ steps, currentStep, stepsLabel }) => {
   return (
-    <div className="flex items-center justify-center space-x-4 sm:space-x-8">
+    <div className="flex items-center justify-between space-x-6 sm:space-x-12">
       {steps.map((step, index) => (
         <div key={step} className="flex flex-col items-center">
           <div
             className={`flex items-center justify-center 
-            h-8 w-8 sm:h-10 sm:w-10 
-            border-2 rounded-full font-bold 
+            h-10 w-10 sm:h-12 sm:w-12 
+            border-2 rounded-full text-lg font-semibold 
             ${index + 1 === currentStep
-              ? "bg-orange-100 text-[#FF6F00] border-[#FF6F00]"
+              ? "bg-[#FF6F00] text-white border-[#FF6F00]"
               : "border-gray-400 text-gray-600"}`}
           >
             {index + 1}
           </div>
           {stepsLabel && (
-            <p className="text-xs sm:text-sm mt-1 sm:mt-2 text-gray-700">
+            <p className="text-xs sm:text-sm mt-2 text-gray-700 text-center">
               {stepsLabel[index]}
             </p>
           )}
@@ -42,39 +41,27 @@ const Checkout = () => {
   const API_URL =
     "https://ecomwebapi-gsbbgmgbfubhc8hk.canadacentral-01.azurewebsites.net";
 
-  // Fetch user info and addresses
   useEffect(() => {
     const fetchUserInfoAndAddresses = async () => {
       const token = user?.token || localStorage.getItem("authToken");
+
       if (!token) {
         console.log("Unauthorized - No token found");
         return;
       }
       setLoading(true);
       try {
-        // Fetch user data
-        const userResponse = await fetch(`${API_URL}/api/user/`, {
+        const response = await fetch(`${API_URL}/api/user/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        if (!userResponse.ok) throw new Error("Failed to fetch user info");
-        const userData = await userResponse.json();
+        if (!response.ok) throw new Error("Failed to fetch user info and addresses");
+        const data = await response.json();
 
-        // Fetch user addresses
-        const addressResponse = await fetch(`${API_URL}/api/user`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!addressResponse.ok) throw new Error("Failed to fetch addresses");
-        const addressData = await addressResponse.json();
-
-        // Store the user ID and addresses
-        const allAddresses = addressData.address.flat();
+        const allAddresses = data.address.flat();
         setAddressList(allAddresses);
 
-        // Check if delivery is available for specific areas
         const isDeliveryAvailable = allAddresses.some(
           (address) =>
             address.toLowerCase().includes("madrid") ||
@@ -100,19 +87,20 @@ const Checkout = () => {
   };
 
   const handleAddAddress = async (e) => {
-    e.preventDefault(); // Prevent form submission on Add Address button click
-    console.log("Add Address button clicked"); // Debugging log
-  
+    e.preventDefault();
     const token = user?.token || localStorage.getItem("authToken");
-    if (!newAddress || !token || !user?.id) {
-      console.log("Missing address or token or user ID");
+    const userID = user?.id || localStorage.getItem("userId");
+
+    if (!newAddress || !token || !userID) {
+      alert("Missing address, token, or user ID");
       return;
     }
-  
+
+    setLoading(true);
+
     try {
-      console.log("Sending address:", newAddress); // Debugging log
       const response = await fetch(
-        `${API_URL}/api/user/address/${user.id}/add`,
+        `${API_URL}/api/user/address/${userID}/add`,
         {
           method: "POST",
           headers: {
@@ -122,30 +110,26 @@ const Checkout = () => {
           body: JSON.stringify({ address: newAddress }),
         }
       );
-  
-      console.log("Response status:", response.status); // Debugging log
-  
+
       if (response.ok) {
-        const responseData = await response.json();
-        console.log("Response data:", responseData); // Debugging log
         setAddressList((prevAddresses) => [...prevAddresses, newAddress]);
         setSelectedAddress(newAddress);
         setNewAddress("");
         alert("Address added successfully!");
       } else {
         const errorData = await response.json();
-        console.error("Error response data:", errorData); // Log error response
-        throw new Error("Failed to add address");
+        alert(`Error: ${errorData.message}`);
       }
     } catch (error) {
-      console.error("Error adding address:", error.message); // Debugging log
-      alert("Error adding address");
+      console.error("Error adding address:", error.message);
+      alert("An error occurred while adding the address.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (
       !paymentMethod ||
       !selectedAddress ||
@@ -154,47 +138,99 @@ const Checkout = () => {
       alert("Please fill in all required fields.");
       return;
     }
-
-    alert(
-      `Payment Method: ${paymentMethod}\nSelected Address: ${selectedAddress}`
-    );
-    // Submission logic
+  
+    const token = user?.token || localStorage.getItem("authToken");
+  
+    if (!token) {
+      alert("Unauthorized - No token found");
+      return;
+    }
+  
+    setLoading(true);
+  
+    try {
+      // Fetch products from the cart (replace this with your actual cart fetching logic)
+      const cartResponse = await fetch(`${API_URL}/api/cart`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!cartResponse.ok) throw new Error("Failed to fetch cart items");
+      const cartData = await cartResponse.json();
+  
+      const products = cartData.map(item => ({
+        productId: item.productId._id,
+        productName: item.productId.name, // Assuming productName is available in cartData
+        quantity: item.quantity,
+        price: item.productId.price, // Assuming price is available in cartData
+        totalPrice: item.productId.price * item.quantity
+      }));
+  
+      const totalAmount = products.reduce((total, product) => total + product.totalPrice, 0);
+  
+      const payload = {
+        paymentMethod, // The selected payment method
+        address: selectedAddress, // The selected address
+        products, // List of products with details
+        totalAmount, // Total amount calculated
+      };
+  
+      const response = await fetch(`${API_URL}/api/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload), // Send the payload in the correct format
+      });
+  
+      if (response.ok) {
+        alert("Order placed successfully!");
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error("Error placing order:", error.message);
+      alert("An error occurred while placing the order.");
+    } finally {
+      setLoading(false);
+    }
   };
+  
 
   return (
-    <div className="p-4 font-slick">
-      {/* Step Indicator */}
-      <div className="font-slick flex justify-between mb-8">
-        <h1 className="font-bold text-xl sm:text-2xl mb-6">Checkout</h1>
-        <div className="steps">
-          <StepIndicator
-            steps={steps}
-            currentStep={currentStep}
-            stepsLabel={stepsLabel}
-          />
-        </div>
+    <div className="p-6 sm:p-8 bg-white shadow-lg rounded-lg">
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="font-semibold text-2xl sm:text-3xl text-gray-800">
+          Checkout
+        </h1>
+        <StepIndicator
+          steps={steps}
+          currentStep={currentStep}
+          stepsLabel={stepsLabel}
+        />
       </div>
 
-      {/* Checkout Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-4">
-          <h2 className="text-lg font-bold text-gray-800">Shipping Information</h2>
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="space-y-6">
+          <h2 className="text-xl font-semibold text-gray-800">Shipping Information</h2>
           <input
             type="text"
             placeholder="Full Name"
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-orange-300"
+            className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF6F00] transition"
             required
           />
           <input
             type="number"
             placeholder="Contact Number"
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-orange-300"
+            className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF6F00] transition"
             required
           />
           <select
             value={selectedAddress}
             onChange={(e) => setSelectedAddress(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-orange-300"
+            className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF6F00] transition"
             required
             disabled={!isDeliveryAvailable}
           >
@@ -211,18 +247,18 @@ const Checkout = () => {
           </select>
 
           {selectedAddress === "Add New Address" && (
-            <div className="mt-4">
+            <div className="mt-4 space-y-4">
               <input
                 type="text"
                 value={newAddress}
                 onChange={handleNewAddressChange}
                 placeholder="Enter new address"
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-orange-300"
+                className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF6F00] transition"
               />
               <button
                 type="button"
                 onClick={handleAddAddress}
-                className="w-full mt-2 bg-[#FF6F00] text-white py-3 rounded-md font-bold hover:bg-[#e65e00] transition"
+                className="w-full py-3 rounded-lg bg-[#FF6F00] text-white font-bold hover:bg-[#e65e00] transition"
                 disabled={!newAddress.trim()}
               >
                 Add Address
@@ -231,49 +267,29 @@ const Checkout = () => {
           )}
         </div>
 
-        <div className="space-y-4">
-          <h2 className="text-lg font-bold text-gray-800">Payment Method</h2>
-          <div className="flex flex-col space-y-2">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="paymentMethod"
-                value="Cash on Delivery"
-                checked={paymentMethod === "Cash on Delivery"}
-                onChange={handlePaymentChange}
-                className="mr-2"
-              />
-              Cash
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="paymentMethod"
-                value="GCash"
-                checked={paymentMethod === "GCash"}
-                onChange={handlePaymentChange}
-                className="mr-2"
-              />
-              GCash
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="paymentMethod"
-                value="PayMaya"
-                checked={paymentMethod === "PayMaya"}
-                onChange={handlePaymentChange}
-                className="mr-2"
-              />
-              PayMaya
-            </label>
+        <div className="space-y-6">
+          <h2 className="text-xl font-semibold text-gray-800">Payment Method</h2>
+          <div className="flex flex-col space-y-4">
+            {["Cash on Delivery", "GCash", "PayMaya"].map((method) => (
+              <label key={method} className="flex items-center space-x-3">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value={method}
+                  checked={paymentMethod === method}
+                  onChange={handlePaymentChange}
+                  className="text-[#FF6F00] focus:ring-[#FF6F00]"
+                />
+                <span className="text-gray-800">{method}</span>
+              </label>
+            ))}
           </div>
         </div>
 
         <div>
           <button
             type="submit"
-            className="w-full bg-[#FF6F00] text-white py-3 rounded-md font-bold hover:bg-[#e65e00] transition"
+            className="w-full py-4 rounded-lg bg-[#FF6F00] text-white font-bold hover:bg-[#e65e00] transition"
           >
             Confirm and Place Order
           </button>

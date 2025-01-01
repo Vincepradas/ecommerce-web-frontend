@@ -51,17 +51,9 @@ const Home = () => {
         </div>
 
         {/* Welcome Section */}
-        <h2 className="font-fuzzy font-black text-3xl md:text-4xl text-[#1F2232] text-center mb-4">
-          Welcome to <span className="text-[#FF6F00]">Sandra's</span>
-          <br />
-          <span className="relative inline-block">
-            <span className="font-normal text-sm text-gray-600 mt-2 block font-poppins italic">
-              <span className="font-bold">Note:</span> Delivery is currently
-              available only within
-              <span className="font-bold"> Cantilan - Madrid</span>. Kindly
-              check if your location is eligible for delivery during checkout.
-            </span>
-          </span>
+        <h2 className="font-poppins font-black text-3xl md:text-4xl text-[#1F2232] text-center mb-4">
+          EXPLORE <span className="text-[#FF6F00]"> SANDRA'S</span>
+
         </h2>
 
         {/* Category Filter Buttons */}

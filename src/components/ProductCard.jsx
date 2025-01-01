@@ -28,7 +28,7 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <div className="product-card bg-white rounded-2xl overflow-hidden border border-gray-300 transition-shadow duration-300 h-[500px] flex flex-col relative font-slick">
+    <div className="product-card bg-white rounded-sm overflow-hidden border border-gray-300 transition-shadow duration-300 h-[500px] flex flex-col relative font-slick">
       {/* Product Thumbnail */}
       <Link to={`/products/${product._id}`} className="relative block h-[60%]">
         {thumbnail ? (

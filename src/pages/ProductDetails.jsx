@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+
+import React, { useState, useEffect, useRef, useMemo, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Modal from "../components/LoginModal";
 import { PrimaryButton, SecondaryButton } from "../components/Button";
@@ -12,6 +13,7 @@ import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { motion } from "framer-motion";
 import "../style/ProductDetails.css";
+import AuthContext from "../context/AuthContext";
 
 const ProductDetails = () => {
   let [quantity, setQuantity] = useState(1);
@@ -22,6 +24,7 @@ const ProductDetails = () => {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const swiperRef = useRef(null);
   const isAuthenticated = !!localStorage.getItem("authToken");
+  const { user, load } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,7 +60,21 @@ const ProductDetails = () => {
   };
 
   const handleCheckout = () => {
-    setShowCheckoutModal(true);
+    const checkoutItem = {
+      productId: product._id,
+      productName: product.name,
+      quantity: quantity,
+      price: discountedPrice || product.price,
+      totalPrice: (discountedPrice || product.price) * quantity
+    };
+    
+    navigate('/checkout', { 
+      state: { 
+        directPurchase: true,
+        products: [checkoutItem],
+        totalAmount: checkoutItem.totalPrice
+      } 
+    });
   };
 
   const handleCloseCheckout = () => {
@@ -73,6 +90,44 @@ const ProductDetails = () => {
       }
       return quantity;
     });
+  };
+
+  const addToCartAPI = async (productId, quantity) => {
+    const token = user?.token || localStorage.getItem("authToken");
+    if (!token) {
+      console.log("Unauthorized - No token found");
+      return;
+    }
+
+    const url =
+      "https://ecomwebapi-gsbbgmgbfubhc8hk.canadacentral-01.azurewebsites.net/api/cart/add";
+
+    // Simplified payload matching backend expectations
+    const payload = {
+      productId,
+      quantity,
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to add to cart: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   };
 
   // Checkout Modal Component
@@ -273,53 +328,25 @@ const ProductDetails = () => {
                     });
                   }}
                 >
-                  Buy Now 
+                  Buy Now
                 </PrimaryButton>
                 <SecondaryButton
-                  onClick={() =>
-                    handleAction(() => {
-                      alert("Added to Cart");
-                    })
-                  }
+                  onClick={async () => {
+                    try {
+                      await handleAction(async () => {
+                        await addToCartAPI(product._id, quantity);
+                        alert(`${product.name} has been added to the cart!`);
+                      });
+                    } catch (error) {
+                      alert("Failed to add product to cart. Please try again.");
+                    }
+                  }}
                 >
                   Add to Cart
                 </SecondaryButton>
               </div>
             </motion.div>
           )}
-        </div>
-      </div>
-
-      <div className="flex border rounded-lg border-gray-300">
-        <div className="w-full max-w-md m-4 p-4 rounded-lg border border-gray-300">
-          <div className="flex flex-col mb-6">
-            <h1 className="text-2xl font-bold mb-3 text-gray-800">Coupon</h1>
-            <input
-              type="text"
-              placeholder="Coupon Pin"
-              className="border p-3 rounded-md border-gray-300 md:w-full focus:outline-none focus:ring-2 focus:ring-black transition duration-200"
-            />
-            <button 
-            className="bg-black text-white font-bold text-lg py-2 px-6 rounded-full transition duration-200 hover:bg-gray-800 mt-2"
-            onClick={() =>
-              handleAction(() => {
-              })
-            }
-            >
-              Apply
-            </button>
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold my-4 text-gray-800">Address</h1>
-            <select className="border p-3 rounded-md border-gray-300 text-gray-700 w-full bg-white focus:outline-none focus:ring-2 focus:ring-black transition duration-200">
-              <option value="" disabled selected>
-                Set your address
-              </option>
-              <option value="address1">Address 1</option>
-              <option value="address2">Address 2</option>
-              <option value="newAddress">Add New Address</option>
-            </select>
-          </div>
         </div>
       </div>
 
