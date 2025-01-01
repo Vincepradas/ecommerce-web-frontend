@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import AuthContext from "../context/AuthContext";
 import { Link } from "react-router-dom";
+import Login from "./Login";
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -116,7 +117,7 @@ const Cart = () => {
   }
 
   if (error) {
-    return <div className="flex items-center justify-center min-h-[200px]"><p className="text-red-500">Error: {error}</p></div>;
+    return <div className="flex items-center justify-center min-h-[200px]"><Login/></div>;
   }
 
   return (
