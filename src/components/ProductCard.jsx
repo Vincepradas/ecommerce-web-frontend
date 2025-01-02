@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
 
 const ProductCard = ({ product }) => {
-  // Function to render stars for the rating
+  
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -20,19 +20,19 @@ const ProductCard = ({ product }) => {
 
   const thumbnail = product.thumbnail?.url;
 
-  // If stock is 0, label the product as sold out
+  
   if (product.stock <= 0) {
     return (
       <div className="product-card  rounded-sm overflow-hidden border border-gray-300 transition-shadow duration-300 h-[500px] flex flex-col relative font-slick">
         {/* Product Image with Sold Out Overlay */}
         <div className="relative h-[50%] flex items-center justify-center">
           <img
-            src={thumbnail || '/placeholder.jpg'} // Placeholder image if no thumbnail
+            src={thumbnail || '/placeholder.jpg'} 
             alt={`${product.name} Thumbnail`}
             className="h-full w-full object-cover transition-transform duration-300 "
           />
           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <span className="text-white text-4xl font-semibold uppercase tracking-wider">Sold Out</span>
+            <span className="text-white font-poppins text-4xl font-semibold uppercase tracking-wider">Sold Out</span>
           </div>
         </div>
 
@@ -103,7 +103,7 @@ const ProductCard = ({ product }) => {
     );
   }
 
-  // Calculate the discounted price if a discount exists
+  
   const discount =
     product.discountPercentage > 0 && product.price
       ? product.price * (1 - product.discountPercentage / 100)

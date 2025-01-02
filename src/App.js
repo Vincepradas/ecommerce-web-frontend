@@ -10,6 +10,7 @@ import Signup from "./pages/SignUp";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Profile from "./pages/Profile";
+import Orders from "./pages/Orders";
 
 import { Route, Routes } from "react-router-dom";
 const App = () => {
@@ -26,6 +27,7 @@ const App = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/orders" element={<Orders />} />
           </Routes>
           <Footer />
         </div>

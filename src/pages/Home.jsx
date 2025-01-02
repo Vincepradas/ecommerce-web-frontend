@@ -125,7 +125,7 @@ const Home = () => {
         </div>
 
         {/* Rest of the component remains the same */}
-        <h2 className="font-poppins font-black text-5xl md:text-4xl text-[#1F2232] text-center mb-2">
+        <h2 className="font-[times-new-roman] font-extrabold text-5xl md:text-4xl text-[#1F2232] text-center mb-2">
           EXPLORE <span className="text-[#FF6F00]"> SANDRA'S</span>
         </h2>
 

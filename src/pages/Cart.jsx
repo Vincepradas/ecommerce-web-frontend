@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import AuthContext from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Login from "./Login";
 import CartItem from "../components/CartItem";
 
@@ -174,8 +174,12 @@ const Cart = () => {
 
   return (
     <div className="cart-section bg-white rounded-lg p-6 max-w-4xl mx-auto my-8 font-poppins">
-      <h2 className="text-2xl font-semibold text-black mb-6 border-b pb-2">Shopping Cart</h2>
+<div className="flex justify-between items-center mb-6 border-b">
+  <h2 className="text-2xl font-semibold text-black pb-2">Shopping Cart</h2>
+  <Link to='/orders' className="border rounded-lg px-4 py-2 mb-2 bg-black text-white">MY ORDERS</Link>
+</div>
 
+      
       <div className="cart-items-list space-y-4 mb-6">
         {cartItems.length > 0 ? (
           cartItems.map((item) => (

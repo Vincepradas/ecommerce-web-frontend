@@ -176,6 +176,7 @@ const Header = () => {
               alt="shopping-bag--v1"
             />
           </Link>
+          
           <button
             onClick={() => setIsSearchVisible(!isSearchVisible)}
             className="text-black hover:text-[#FF6F00] transition duration-300"
