@@ -5,6 +5,7 @@ import Modal from "../components/LoginModal";
 
 const Reviews = ({ productId }) => {
   const [reviews, setReviews] = useState([]);
+  const [displayedReviews, setDisplayedReviews] = useState([]);
   const [newReview, setNewReview] = useState("");
   const [rating, setRating] = useState(0);
   const [reviewerName, setReviewerName] = useState("Loading...");
@@ -18,15 +19,21 @@ const Reviews = ({ productId }) => {
     fetch(`${API_URL}/api/products/${productId}`)
       .then((res) => res.json())
       .then((data) => {
-        console.log("Fetched Reviews Data:", data);
         if (data.error) {
           console.error("Error fetching reviews:", data.error);
         } else {
           setReviews(data.reviews || []);
+          setDisplayedReviews((data.reviews || []).slice(0, 2));
         }
       })
       .catch((error) => console.error("Error fetching reviews:", error));
   }, [productId]);
+
+  const loadMoreReviews = () => {
+    const currentLength = displayedReviews.length;
+    const newReviews = reviews.slice(0, currentLength + 2);
+    setDisplayedReviews(newReviews);
+  };
 
   const submitReview = () => {
     if (!newReview.trim() || rating === 0) {
@@ -55,14 +62,16 @@ const Reviews = ({ productId }) => {
         return res.json();
       })
       .then(() => {
-        setReviews((prevReviews) => [
-          ...prevReviews,
-          {
-            reviewerName: user?.name || reviewerName,
-            rating,
-            comment: newReview.trim(),
-          },
-        ]);
+        const newReviewObj = {
+          reviewerName: user?.name || reviewerName,
+          rating,
+          comment: newReview.trim(),
+        };
+        setReviews(prevReviews => [newReviewObj, ...prevReviews]);
+        setDisplayedReviews(prevDisplayed => {
+          const newDisplayed = [newReviewObj, ...prevDisplayed];
+          return newDisplayed.slice(0, 2);
+        });
         setNewReview("");
         setRating(0);
         alert("Review submitted successfully!");
@@ -82,11 +91,11 @@ const Reviews = ({ productId }) => {
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       <h2 className="text-xl font-bold text-gray-900 mb-4">Customer Reviews</h2>
       <div className="reviews-list space-y-4 mb-6">
-        {reviews.length > 0 ? (
-          reviews.map((review, index) => (
+        {displayedReviews.length > 0 ? (
+          displayedReviews.map((review, index) => (
             review && (
               <div key={index} className="review bg-gray-100 p-3 rounded-md shadow-sm">
-                <h1 className="text-gray-600 font-bold ">{review.reviewerName}</h1>
+                <h1 className="text-gray-600 font-bold">{review.reviewerName}</h1>
                 <div className="flex items-center space-x-1 mb-1">
                   {[...Array(5)].map((_, i) => (
                     <FaStar
@@ -104,6 +113,17 @@ const Reviews = ({ productId }) => {
           <p className="text-gray-500 text-sm">No reviews yet. Be the first to leave one!</p>
         )}
       </div>
+
+      {displayedReviews.length < reviews.length && (
+        <div className="text-center mb-6">
+          <button
+            onClick={loadMoreReviews}
+            className=" border border-black/50 text-gray-700 px-4 py-[3px] rounded-md hover:bg-gray-200 transition"
+          >
+            Load more
+          </button>
+        </div>
+      )}
 
       {isAuthenticated ? (
         <div className="add-review bg-white p-4 rounded-md shadow-sm">
