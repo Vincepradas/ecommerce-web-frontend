@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Modal from "../components/LoginModal";
@@ -21,10 +20,9 @@ const ProductDetails = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [product, setProduct] = useState({});
   const [loading, setLoading] = useState(true);
-  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const swiperRef = useRef(null);
   const isAuthenticated = !!localStorage.getItem("authToken");
-  const { user, load } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -60,25 +58,25 @@ const ProductDetails = () => {
   };
 
   const handleCheckout = () => {
+    const originalPrice = product.price;
+    const finalPrice = discountedPrice || originalPrice;
+    const totalPrice = finalPrice * quantity;
+    
     const checkoutItem = {
       productId: product._id,
       productName: product.name,
       quantity: quantity,
-      price: discountedPrice || product.price,
-      totalPrice: (discountedPrice || product.price) * quantity
+      price: originalPrice,
+      discountPercentage: product.discountPercentage || 0,
+      totalPrice: totalPrice
     };
     
     navigate('/checkout', { 
       state: { 
-        directPurchase: true,
-        products: [checkoutItem],
-        totalAmount: checkoutItem.totalPrice
+        isDirectCheckout: true,
+        directItemData: checkoutItem
       } 
     });
-  };
-
-  const handleCloseCheckout = () => {
-    setShowCheckoutModal(false);
   };
 
   const handleQuantity = (action) => {
@@ -99,10 +97,8 @@ const ProductDetails = () => {
       return;
     }
 
-    const url =
-      "https://ecomwebapi-gsbbgmgbfubhc8hk.canadacentral-01.azurewebsites.net/api/cart/add";
+    const url = `${config.API_URL}/cart/add`;
 
-    // Simplified payload matching backend expectations
     const payload = {
       productId,
       quantity,
@@ -130,70 +126,6 @@ const ProductDetails = () => {
     }
   };
 
-  // Checkout Modal Component
-  const CheckoutModal = ({ onClose, product }) => {
-    const formatPrice = (price) =>
-      new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "PHP",
-        minimumFractionDigits: 0,
-      }).format(price);
-
-    const handleCheckout = () => {
-      alert("Redirecting to checkout page...");
-      navigate("/checkout");
-      onClose();
-    };
-    const discountedPrice = useMemo(() => {
-      if (product.discountPercentage) {
-        return product.price * (1 - product.discountPercentage / 100);
-      }
-      return null;
-    }, [product.price, product.discountPercentage]);
-
-    const totalPrice = discountedPrice
-      ? discountedPrice * quantity
-      : product.price * quantity;
-
-    return (
-      <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-700 bg-opacity-50 backdrop-blur-sm font-poppins">
-        <div className="bg-white p-6 rounded-lg shadow-lg w-100 mx-2">
-          <h2 className="text-2xl font-semibold mb-4 text-center text-gray-800">
-            Checkout {product.name} ?
-          </h2>
-
-          <div className="text-center font-slick mb-2">
-            {discountedPrice ? (
-              <>
-                <p className="text-2xl md:text-2xl font-bold text-[#1F2232]">
-                  {formatPrice(totalPrice)}
-                </p>
-              </>
-            ) : (
-              <p className="text-2xl md:text-2xl font-bold text-[#1F2232]">
-                {formatPrice(totalPrice)}
-              </p>
-            )}
-          </div>
-
-          <div className="flex justify-center gap-4">
-            <button
-              className="bg-black text-white font-semi py-2 px-4 rounded-md hover:bg-[#FF6F00]"
-              onClick={handleCheckout}
-            >
-              Proceed
-            </button>
-            <button
-              className="bg-gray-300 text-black font-semi py-2 px-4 rounded-md hover:bg-gray-400"
-              onClick={onClose}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
   return (
     <div className="product-details container mx-auto px-4 py-6 md:px-6 md:py-12 font-slick">
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
@@ -259,9 +191,11 @@ const ProductDetails = () => {
                   </span>
                 ))}
               </p>
-              <p className="text-base md:text-lg text-gray-600 mb-4 font-bold">
-                Save {product.discountPercentage}% Off
-              </p>
+              {product.discountPercentage > 0 && (
+                <p className="text-base md:text-lg text-gray-600 mb-4 font-bold">
+                  Save {product.discountPercentage}% Off
+                </p>
+              )}
               <div className="flex items-center space-x-2">
                 <span className="flex space-x-1">
                   {[...Array(5)].map((_, i) => (
@@ -274,7 +208,7 @@ const ProductDetails = () => {
                   ))}
                 </span>
                 <span className="text-gray-500">
-                  {product.rating} ({product.reviews.length})
+                  {product.rating} ({product.reviews?.length || 0})
                 </span>
               </div>
 
@@ -351,10 +285,6 @@ const ProductDetails = () => {
       </div>
 
       <Reviews productId={id} />
-
-      {showCheckoutModal && (
-        <CheckoutModal onClose={handleCloseCheckout} product={product} />
-      )}
     </div>
   );
 };

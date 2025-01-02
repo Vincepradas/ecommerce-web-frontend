@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
+import config from "../config";
 
 const StepIndicator = ({ steps, currentStep, stepsLabel }) => {
   return (
@@ -10,9 +12,11 @@ const StepIndicator = ({ steps, currentStep, stepsLabel }) => {
             className={`flex items-center justify-center 
             h-10 w-10 sm:h-12 sm:w-12 
             border-2 rounded-full text-lg font-semibold 
-            ${index + 1 === currentStep
-              ? "bg-[#FF6F00] text-white border-[#FF6F00]"
-              : "border-gray-400 text-gray-600"}`}
+            ${
+              index + 1 === currentStep
+                ? "bg-[#FF6F00] text-white border-[#FF6F00]"
+                : "border-gray-400 text-gray-600"
+            }`}
           >
             {index + 1}
           </div>
@@ -37,9 +41,43 @@ const Checkout = () => {
   const [newAddress, setNewAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [isDeliveryAvailable, setIsDeliveryAvailable] = useState(true);
+  const [orderSummary, setOrderSummary] = useState(null);
   const { user } = useContext(AuthContext);
-  const API_URL =
-    "https://ecomwebapi-gsbbgmgbfubhc8hk.canadacentral-01.azurewebsites.net";
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isDirectCheckout, directItemData, cartItems } = location.state || {};
+console.log(orderSummary)
+  useEffect(() => {
+    
+    if (isDirectCheckout && directItemData) {
+      const summary = {
+        quantity: directItemData.quantity,
+        price: directItemData.price,
+        discountPercentage: directItemData.discountPercentage,
+        totalPrice: directItemData.totalPrice,
+        productName: directItemData.productName,
+      };
+      setOrderSummary(summary);
+    } else if (cartItems) {
+      const formattedItems = location.state.cartItems.map(item => ({
+        quantity: item.quantity, 
+        price: item.price, 
+        discountPercentage: item.discountPercentage || 0, 
+        totalPrice: item.price * item.quantity * (1 - (item.discountPercentage || 0) / 100), 
+        productName: item.productName
+      }));
+    
+      const summary = {
+        items: formattedItems, 
+        totalPrice: location.state.totalAmount
+      };
+    
+      setOrderSummary(summary);
+    } else {
+      
+      navigate("/cart");
+    }
+  }, [isDirectCheckout, directItemData, navigate, cartItems, location.state]);
 
   useEffect(() => {
     const fetchUserInfoAndAddresses = async () => {
@@ -51,12 +89,13 @@ const Checkout = () => {
       }
       setLoading(true);
       try {
-        const response = await fetch(`${API_URL}/api/user/`, {
+        const response = await fetch(`${config.API_URL}/user/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        if (!response.ok) throw new Error("Failed to fetch user info and addresses");
+        if (!response.ok)
+          throw new Error("Failed to fetch user info and addresses");
         const data = await response.json();
 
         const allAddresses = data.address.flat();
@@ -100,7 +139,7 @@ const Checkout = () => {
 
     try {
       const response = await fetch(
-        `${API_URL}/api/user/address/${userID}/add`,
+        `${config.API_URL}/user/address/${userID}/add`,
         {
           method: "POST",
           headers: {
@@ -128,8 +167,25 @@ const Checkout = () => {
     }
   };
 
+  
+  const removeFromCart = (productId) => {
+    const token = user?.token || localStorage.getItem("authToken");
+
+    fetch(`${config.API_URL}/cart/remove`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ productId }),
+    }).catch((err) => console.error("Error removing product from cart", err));
+  };
+
+  
   const handleSubmit = async (e) => {
+    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     e.preventDefault();
+
     if (
       !paymentMethod ||
       !selectedAddress ||
@@ -138,71 +194,183 @@ const Checkout = () => {
       alert("Please fill in all required fields.");
       return;
     }
-  
+
     const token = user?.token || localStorage.getItem("authToken");
-  
     if (!token) {
       alert("Unauthorized - No token found");
       return;
     }
-  
+
     setLoading(true);
-  
+
     try {
-      // Fetch products from the cart (replace this with your actual cart fetching logic)
-      const cartResponse = await fetch(`${API_URL}/api/cart`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!cartResponse.ok) throw new Error("Failed to fetch cart items");
-      const cartData = await cartResponse.json();
-  
-      const products = cartData.map(item => ({
-        productId: item.productId._id,
-        productName: item.productId.name, // Assuming productName is available in cartData
-        quantity: item.quantity,
-        price: item.productId.price, // Assuming price is available in cartData
-        totalPrice: item.productId.price * item.quantity
-      }));
-  
-      const totalAmount = products.reduce((total, product) => total + product.totalPrice, 0);
-  
-      const payload = {
-        paymentMethod, // The selected payment method
-        address: selectedAddress, // The selected address
-        products, // List of products with details
-        totalAmount, // Total amount calculated
-      };
-  
-      const response = await fetch(`${API_URL}/api/orders`, {
+      let orderPayload;
+
+      if (isDirectCheckout && directItemData) {
+        
+        orderPayload = {
+          paymentMethod,
+          address: selectedAddress,
+          products: [
+            {
+              productId: directItemData.productId,
+              productName: directItemData.productName,
+              quantity: directItemData.quantity,
+              price: directItemData.price,
+              discountPercentage: directItemData.discountPercentage,
+              totalPrice: directItemData.totalPrice,
+            },
+          ],
+          totalAmount: directItemData.totalPrice,
+        };
+      } else if (location.state?.cartItems) {
+        
+        orderPayload = {
+          paymentMethod,
+          address: selectedAddress,
+          products: location.state.cartItems,
+          totalAmount: location.state.totalAmount,
+        };
+      } else {
+        alert("Invalid checkout data");
+        return;
+      }
+
+      
+      const orderResponse = await fetch(`${config.API_URL}/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload), // Send the payload in the correct format
+        body: JSON.stringify(orderPayload),
       });
-  
-      if (response.ok) {
-        alert("Order placed successfully!");
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
+
+      if (!orderResponse.ok) {
+        const errorData = await orderResponse.json();
+        throw new Error(errorData.message || "Failed to create order");
       }
+
+      
+      if (location.state?.cartItems) {
+        for (const item of location.state.cartItems) {
+          await removeFromCart(item.productId);
+        }
+        if (location.state?.cartItems) {
+          for (const item of location.state.cartItems) {
+            await removeFromCart(item.productId); 
+            await delay(500); 
+          }
+        }
+      }
+      alert("Order placed successfully!");
+      navigate("/orders");
     } catch (error) {
-      console.error("Error placing order:", error.message);
-      alert("An error occurred while placing the order.");
+      console.error("Error placing order:", error);
+      alert(error.message || "An error occurred while placing the order.");
     } finally {
       setLoading(false);
     }
   };
-  
+
+  const OrderSummary = () => {
+  if (!orderSummary) return null;
+
+  return (
+    <div className="mb-8 p-6 rounded-lg border">
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6 tracking-wide font-poppins">
+        Order Summary
+      </h2>
+
+      {!isDirectCheckout ? (
+        
+        <div className="space-y-6">
+          {orderSummary.items.map((item, index) => (
+            <div key={index} className="border-b pb-4 border-gray-200">
+              <div className="flex justify-between items-center font-poppins">
+                <span className="text-gray-600 text-base">Product:</span>
+                <span className="font-medium text-gray-800">{item.productName}</span>
+              </div>
+              <div className="flex justify-between items-center font-poppins">
+                <span className="text-gray-600 text-base">Quantity:</span>
+                <span className="font-medium text-gray-800">{item.quantity}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 text-base font-poppins">Price per item:</span>
+                <span className="font-medium text-gray-800 font-slick tracking-wider">
+                  ₱{(item.price ?? 0).toFixed(2)}  {/* Using nullish coalescing for fallback */}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-4">
+                <span className="text-gray-800 font-semibold text-base font-poppins">
+                  Total Amount:
+                </span>
+                <span className="font-bold font-slick text-base text-green-600 tracking-wider">
+                  ₱{(item.totalPrice ?? 0).toFixed(2)}  {/* Using nullish coalescing for fallback */}
+                </span>
+              </div>
+            </div>
+          ))}
+          {/* Optionally, display the total amount of the cart here */}
+          <div className="flex justify-between items-center pt-4 font-poppins">
+            <span className="text-gray-800 font-semibold text-base">Cart Total:</span>
+            <span className="font-bold font-slick text-base text-green-600 tracking-wider">
+              ₱{(orderSummary.totalPrice ?? 0).toFixed(2)}  {/* Using nullish coalescing for fallback */}
+            </span>
+          </div>
+        </div>
+      ) : (
+        
+        <div className="space-y-6">
+          <div className="border-b pb-4 border-gray-200">
+            <div className="flex justify-between items-center font-poppins">
+              <span className="text-gray-600 text-base">Product:</span>
+              <span className="font-medium text-gray-800">
+                {orderSummary.productName}
+              </span>
+            </div>
+            <div className="flex justify-between items-center font-poppins">
+              <span className="text-gray-600 text-base">Quantity:</span>
+              <span className="font-medium text-gray-800">
+                {orderSummary.quantity}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 text-base font-poppins">
+                Discount:
+              </span>
+              <span className="font-medium text-gray-800 font-slick tracking-widest">
+                {orderSummary.discountPercentage}%  {/* Using nullish coalescing for fallback */}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 text-base font-poppins">
+                Price per item:
+              </span>
+              <span className="font-medium text-gray-800 font-slick tracking-wider">
+                ₱{(orderSummary.price ?? 0).toFixed(2)}  {/* Using nullish coalescing for fallback */}
+              </span>
+            </div>
+            <div className="flex justify-between items-center pt-4">
+              <span className="text-gray-800 font-semibold text-base font-poppins">
+                Total Amount:
+              </span>
+              <span className="font-bold font-slick text-base text-green-600 tracking-wider">
+                ₱{(orderSummary.totalPrice ?? 0).toFixed(2)}  {/* Using nullish coalescing for fallback */}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 
   return (
     <div className="p-6 sm:p-8 bg-white shadow-lg rounded-lg">
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="font-semibold text-2xl sm:text-3xl text-gray-800">
+        <h1 className=" font-poppins text-2xl text-gray-800">
           Checkout
         </h1>
         <StepIndicator
@@ -212,9 +380,14 @@ const Checkout = () => {
         />
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      {/* Order Summary */}
+      {isDirectCheckout && <OrderSummary />}
+
+      <form onSubmit={handleSubmit} className="space-y-8 font-poppins">
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-gray-800">Shipping Information</h2>
+          <h2 className="text-xl font-semibold text-gray-800">
+            Shipping Information
+          </h2>
           <input
             type="text"
             placeholder="Full Name"
@@ -258,7 +431,7 @@ const Checkout = () => {
               <button
                 type="button"
                 onClick={handleAddAddress}
-                className="w-full py-3 rounded-lg bg-[#FF6F00] text-white font-bold hover:bg-[#e65e00] transition"
+                className="w-full py-3 rounded-lg bg-black text-white font-bold hover:bg-[#e65e00] transition"
                 disabled={!newAddress.trim()}
               >
                 Add Address
@@ -267,10 +440,12 @@ const Checkout = () => {
           )}
         </div>
 
-        <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-gray-800">Payment Method</h2>
+        <div className="space-y-6 font-poppins">
+          <h2 className="text-xl font-semibold text-gray-800">
+            Payment Method
+          </h2>
           <div className="flex flex-col space-y-4">
-            {["Cash on Delivery", "GCash", "PayMaya"].map((method) => (
+            {["Cash on Delivery", "GCash"].map((method) => (
               <label key={method} className="flex items-center space-x-3">
                 <input
                   type="radio"
@@ -289,9 +464,10 @@ const Checkout = () => {
         <div>
           <button
             type="submit"
-            className="w-full py-4 rounded-lg bg-[#FF6F00] text-white font-bold hover:bg-[#e65e00] transition"
+            className="w-full py-4 rounded-lg bg-black text-white font-bold hover:bg-[#e65e00] transition"
+            disabled={loading}
           >
-            Confirm and Place Order
+            {loading ? "Processing..." : "Confirm and Place Order"}
           </button>
         </div>
       </form>

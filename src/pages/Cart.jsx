@@ -1,17 +1,46 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import AuthContext from "../context/AuthContext";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Login from "./Login";
+import CartItem from "../components/CartItem";
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
+  const [selectedItems, setSelectedItems] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [total, setTotal] = useState(0);
   const { user } = useContext(AuthContext);
   const API_URL = "https://ecomwebapi-gsbbgmgbfubhc8hk.canadacentral-01.azurewebsites.net";
+  const navigate = useNavigate();
 
-  // Fetch Cart
+  // Clear Cart
+  const clearCart = () => {
+    const token = user?.token || localStorage.getItem("authToken");
+    if (!token) {
+      setError("Unauthorized - No token found");
+      return;
+    }
+
+    fetch(`${API_URL}/api/cart/clear`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.message === "Cart cleared successfully") {
+          setCartItems([]);
+          setTotal(0);
+        } else {
+          setError(data.message || "Failed to clear cart");
+        }
+      })
+      .catch((err) => setError(err.message));
+  };
+
   const fetchCart = useCallback(() => {
     const token = user?.token || localStorage.getItem("authToken");
     if (!token) {
@@ -48,6 +77,13 @@ const Cart = () => {
           return acc + price * quantity;
         }, 0);
         setTotal(totalAmount);
+
+        // Initialize selected items state
+        const initialSelection = items.reduce((acc, item) => {
+          acc[item._id] = false;
+          return acc;
+        }, {});
+        setSelectedItems(initialSelection);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -74,6 +110,11 @@ const Cart = () => {
         if (data.cart) {
           setCartItems(data.cart.items);
           setTotal(data.cart.totalAmount);
+
+          // Update selected items
+          const updatedSelection = { ...selectedItems };
+          delete updatedSelection[productId];
+          setSelectedItems(updatedSelection);
         } else {
           setError(data.message || "Failed to remove item");
         }
@@ -81,31 +122,42 @@ const Cart = () => {
       .catch((err) => setError(err.message));
   };
 
-  // Clear Cart
-  const clearCart = () => {
-    const token = user?.token || localStorage.getItem("authToken");
-    if (!token) {
-      setError("Unauthorized - No token found");
+  const handleCheckout = () => {
+    const selectedCartItems = cartItems.filter((item) => selectedItems[item._id]);
+    if (selectedCartItems.length === 0) {
+      alert("Please select at least one item to checkout.");
       return;
     }
+  
+    // Calculate total price for selected items
+    const selectedTotal = selectedCartItems.reduce((acc, item) => {
+      const price = Number(item.productId?.price) || 0;
+      const quantity = Number(item.quantity) || 0;
+      return acc + price * quantity;
+    }, 0);
+  
+    // Navigate with selected items data
+    navigate("/checkout", {
+      state: {
+        isDirectCheckout: false,
+        cartItems: selectedCartItems.map(item => ({
+          productId: item.productId._id,
+          productName: item.productId.name,
+          quantity: item.quantity,
+          price: item.productId.price,
+          discountPercentage: item.productId.discountPercentage || 0,
+          totalPrice: item.productId.price * item.quantity
+        })),
+        totalAmount: selectedTotal
+      }
+    });
+  };
 
-    fetch(`${API_URL}/api/cart/clear`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.message === "Cart cleared successfully") {
-          setCartItems([]);
-          setTotal(0);
-        } else {
-          setError(data.message || "Failed to clear cart");
-        }
-      })
-      .catch((err) => setError(err.message));
+  const toggleSelection = (id) => {
+    setSelectedItems((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
   };
 
   useEffect(() => {
@@ -117,28 +169,23 @@ const Cart = () => {
   }
 
   if (error) {
-    return <div className="flex items-center justify-center min-h-[200px]"><Login/></div>;
+    return <div className="flex items-center justify-center min-h-[200px]"><Login /></div>;
   }
 
   return (
     <div className="cart-section bg-white rounded-lg p-6 max-w-4xl mx-auto my-8 font-poppins">
       <h2 className="text-2xl font-semibold text-black mb-6 border-b pb-2">Shopping Cart</h2>
-      
+
       <div className="cart-items-list space-y-4 mb-6">
         {cartItems.length > 0 ? (
           cartItems.map((item) => (
-            <div key={item._id} className="flex justify-between items-center border-b py-4">
-              <div>
-                <h3 className="text-lg font-medium text-black">{item.productId?.name || "Unnamed Product"}</h3>
-                <p className="text-sm text-gray-600">PHP {Number(item.productId?.price).toFixed(2)} x {item.quantity}</p>
-              </div>
-              <button
-                className="text-sm text-red-600 hover:underline"
-                onClick={() => removeFromCart(item.productId?._id)}
-              >
-                Remove
-              </button>
-            </div>
+            <CartItem
+              key={item._id}
+              item={item}
+              selectedItems={selectedItems}
+              toggleSelection={toggleSelection}
+              removeFromCart={removeFromCart}
+            />
           ))
         ) : (
           <p className="text-center text-gray-500">Your cart is empty.</p>
@@ -151,19 +198,18 @@ const Cart = () => {
           <p className="text-lg font-bold">PHP {total.toFixed(2)}</p>
         </div>
         <div className="flex space-x-4">
-          <button 
+          <button
+            className="w-1/2 py-2 rounded bg-black text-white hover:bg-gray-800"
+            onClick={handleCheckout}
+          >
+            Checkout
+          </button>
+          <button
             className="w-1/2 py-2 rounded bg-black text-white hover:bg-gray-800"
             onClick={clearCart}
           >
             Clear Cart
           </button>
-          <Link
-            to="/checkout"
-            className="w-1/2 py-2 rounded bg-black text-white text-center hover:bg-gray-800"
-            >
-          Checkout
-          </Link>
-          
         </div>
       </div>
     </div>
