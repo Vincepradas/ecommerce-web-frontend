@@ -9,6 +9,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/SignUp";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import Profile from "./pages/Profile";
+
 import { Route, Routes } from "react-router-dom";
 const App = () => {
   return (
@@ -23,6 +25,7 @@ const App = () => {
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
           <Footer />
         </div>

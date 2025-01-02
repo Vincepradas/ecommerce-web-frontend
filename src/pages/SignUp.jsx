@@ -4,30 +4,25 @@ import { Typography } from "@material-tailwind/react";
 import { Link } from "react-router-dom";
 
 const Signup = () => {
-  // Extract the signup function from context
   const { customerSignup } = useContext(AuthContext);
 
-  // State to manage form inputs and messages
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Update form inputs on change
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Handle form submission
   const handleSignup = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
     try {
-      // Call the signup function from context
       await customerSignup(form.name, form.email, form.password);
       setMessage("Signup successful! Please log in.");
-      setForm({ name: "", email: "", password: "" }); // Reset the form
+      setForm({ name: "", email: "", password: "" });
     } catch (error) {
       setMessage(error.message || "Signup failed. Try again.");
     } finally {
@@ -36,18 +31,20 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex justify-center font-poppins">
-      <div className="bg-white p-8 w-full sm:w-[400px]">
+    <div className="min-h-screen flex justify-center items-center bg-gradient-to-b from-white to-orange-50 font-poppins">
+      <div className=" p-8 w-full sm:w-[400px] bg-gradient-to-t to-white from-orange-50 f">
         {/* Heading */}
         <Typography
           variant="h4"
-          color="blue-gray"
-          className="font-poppins py-2"
+          className="text-orange-500 font-bold mb-2 text-center font-poppins"
         >
-          Customer Registration
+          Create Account
         </Typography>
-        <Typography className="text-gray-600 mb-6" variant="small">
-          Fill in your details to create an account.
+        <Typography
+          className="text-gray-700 text-center mb-6"
+          variant="small"
+        >
+          Enter your details to sign up.
         </Typography>
 
         {/* Form */}
@@ -67,7 +64,10 @@ const Signup = () => {
 
           {/* Name Field */}
           <div className="mb-4">
-            <label htmlFor="name" className="text-gray-700 text-sm font-medium">
+            <label
+              htmlFor="name"
+              className="text-gray-700 text-sm font-medium"
+            >
               Name
             </label>
             <input
@@ -78,7 +78,7 @@ const Signup = () => {
               onChange={handleChange}
               placeholder="Full Name"
               required
-              className="rounded-lg w-full mt-1 px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-lg w-full mt-1 px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
             />
           </div>
 
@@ -88,7 +88,7 @@ const Signup = () => {
               htmlFor="email"
               className="text-gray-700 text-sm font-medium"
             >
-              Your Email
+              Email Address
             </label>
             <input
               id="email"
@@ -98,7 +98,7 @@ const Signup = () => {
               onChange={handleChange}
               placeholder="Email"
               required
-              className="rounded-lg w-full mt-1 px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-lg w-full mt-1 px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
             />
           </div>
 
@@ -108,7 +108,7 @@ const Signup = () => {
               htmlFor="password"
               className="text-gray-700 text-sm font-medium"
             >
-              Your Password
+              Password
             </label>
             <input
               id="password"
@@ -118,7 +118,7 @@ const Signup = () => {
               onChange={handleChange}
               placeholder="Password"
               required
-              className="rounded-lg w-full mt-1 px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-lg w-full mt-1 px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
             />
           </div>
 
@@ -126,26 +126,24 @@ const Signup = () => {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-2 rounded-lg text-white font-bold focus:ring-2 ${
+            className={`font-poppins w-full py-3 rounded-lg text-white font-bold shadow-md focus:ring-2 focus:ring-orange-400 transition duration-200 ${
               loading
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-gray-800 hover:bg-gray-700"
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-gradient-to-r from-orange-500 to-yellow-500 hover:opacity-90"
             }`}
           >
-            {loading ? "Signing up..." : "Sign up"}
+            {loading ? "Signing up..." : "Sign Up"}
           </button>
         </form>
 
         {/* Login Redirect */}
-        <p className="text-sm text-gray-600 text-center mt-4">
-          Already have an account?{" "}
-          <Link to={"/login"}>
-            <p
-              href="/login"
-              className="text-blue-600 hover:underline font-semibold"
-            >
-              Log in
-            </p>
+        <p className="text-sm text-gray-700 text-center mt-4">
+          Already have an account?{' '}
+          <Link
+            to="/login"
+            className="font-medium text-orange-500 hover:underline"
+          >
+            Log In
           </Link>
         </p>
       </div>
