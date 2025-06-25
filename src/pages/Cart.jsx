@@ -11,7 +11,7 @@ const Cart = () => {
   const [error, setError] = useState(null);
   const [total, setTotal] = useState(0);
   const { user } = useContext(AuthContext);
-  const API_URL = "https://ecomwebapi-gsbbgmgbfubhc8hk.canadacentral-01.azurewebsites.net";
+  const API_URL = "https://ecom-sandras-g6abfyg2azbqekf8.southeastasia-01.azurewebsites.net/";
   const navigate = useNavigate();
 
   // Clear Cart

@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://ecomwebapi-gsbbgmgbfubhc8hk.canadacentral-01.azurewebsites.net/api/:path*"
+      "destination": "https://ecom-sandras-g6abfyg2azbqekf8.southeastasia-01.azurewebsites.net//api/:path*"
     }
   ]
 }

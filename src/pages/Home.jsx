@@ -1,98 +1,90 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import ProductCard from "../components/ProductCard";
 import useFetch from "../hooks/useFetch";
 import config from "../config";
-import images from "../assets/images";
 
-const ImageSlider = ({ images, interval = 4000 }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-    }, interval);
-
-    return () => clearInterval(timer);
-  }, [images.length, interval]);
-
-  const getSlideStyle = (index) => {
-    const isActive = index === currentIndex;
-    return {
-      opacity: isActive ? 1 : 0,
-      transition: 'opacity 500ms ease-in-out',
-      position: index === currentIndex ? 'relative' : 'absolute',
-      inset: 0,
-    };
-  };
+const CategoryFilterDropdown = ({ categories, filter, setFilter, setCurrentPage, sortOrder, setSortOrder }) => {
+  const [showFilters, setShowFilters] = useState(false);
 
   return (
-    <div className="relative w-full overflow-hidden">
-      {/* Image Stack */}
-      <div className="relative">
-        {images.map((image, index) => (
-          <div
-            key={index}
-            style={getSlideStyle(index)}
+    <div className="mt-4 font-[400] rounded-md p-2 max-w-sm mx-auto text-left border-b">
+      <div className="flex justify-between items-center bg-white py-2 rounded-md">
+        <h1 className="font-medium font-poppins text-md text-[#FF6F00]">BROWSE OUR COLLECTIONS!</h1>
+        <div className="flex items-center gap-2">
+          <button
+            className="flex items-center gap-1 bg-[#FF6F00] text-white text-sm p-2 rounded-full"
+            onClick={() => setShowFilters(!showFilters)}
           >
-            <img
-              src={image}
-              alt={`Slide ${index + 1}`}
-              className="w-full h-[150px] sm:h-[300px] md:h-[400px] lg:h-[400px] object-cover"
-            />
-            {(index === 0) && (
-              <div 
-                className="font-fuzzy absolute inset-0 flex items-center justify-center text-white/90 text-[32px] sm:text-2xl md:text-3xl font-extrabold bg-black/25"
-                style={{
-                  opacity: getSlideStyle(index).opacity,
-                  transition: 'opacity 500ms ease-in-out',
-                }}
-              >
-                MERRY CHRISTMAS
-              </div>
+            {showFilters ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-funnel-plus-icon lucide-funnel-plus"><path d="M13.354 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14v6a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341l1.218-1.348" /><path d="M16 6h6" /><path d="M19 3v6" /></svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-funnel-x-icon lucide-funnel-x"><path d="M12.531 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14v6a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341l.427-.473" /><path d="m16.5 3.5 5 5" /><path d="m21.5 3.5-5 5" /></svg>)}
+          </button>
+          <button
+            className="flex items-center gap-1 bg-[#FF6F00] text-white text-sm p-2 rounded-full"
+            onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+          >
+            {sortOrder === 'asc' ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 16l4 4 4-4M7 20V4" /></svg>
+                <span className="hidden sm:inline">Price: Low to High</span>
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 8l-4-4-4 4M17 4v16" /></svg>
+                <span className="hidden sm:inline">Price: High to Low</span>
+              </>
             )}
-          </div>
-        ))}
+          </button>
+        </div>
       </div>
 
-      {/* Navigation Dots */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
-        {images.map((_, index) => (
-          <button
-            key={index}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              currentIndex === index ? 'bg-white scale-125' : 'bg-white/50 scale-100'
-            } hover:scale-125`}
-            onClick={() => setCurrentIndex(index)}
-          />
-        ))}
-      </div>
+      {showFilters && (
+        <div className="pb-4 rounded-md">
+          <p className="text-sm text-gray-500 mb-2">Categories</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              className={`px-4 py-1.5 rounded-md text-xs font-semibold border transition duration-200 ${!filter ? "bg-[#FF6F00] text-white border-[#FF6F00]" : "bg-white text-[#FF6F00] border-[#FF6F00] hover:bg-[#FF6F00]/10"}`}
+              onClick={() => setFilter(null)}
+            >
+              All
+            </button>
+            {categories.map((category) => (
+              <button
+                key={category}
+                className={`px-4 py-1.5 rounded-md text-xs font-semibold border transition duration-200 ${filter === category ? "bg-[#FF6F00] text-white border-[#FF6F00]" : "bg-white text-[#FF6F00] border-[#FF6F00] hover:bg-[#FF6F00]/10"}`}
+                onClick={() => setFilter(category)}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 const Home = () => {
-  const { banner, newyear, bannerDesktop, banner1 } = images;
   const { data: products, loading } = useFetch(`${config.API_URL}/products`);
   const [filter, setFilter] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
-  useEffect(() => {
-    const hasSeenModal = localStorage.getItem("hasSeenModal");
-    if (!hasSeenModal) {
-      setIsModalOpen(true);
-      localStorage.setItem("hasSeenModal", "true");
-    }
-  }, []);
+  const categories = [...new Set(products?.map((product) => product.category))];
 
-  const filteredProducts = products?.filter((product) =>
+  let filteredProducts = products?.filter((product) =>
     filter ? product.category === filter : true
   );
 
-  const categories = [...new Set(products?.map((product) => product.category))];
+  if (sortOrder === 'asc') {
+    filteredProducts = [...filteredProducts].sort((a, b) => a.price - b.price);
+  } else if (sortOrder === 'desc') {
+    filteredProducts = [...filteredProducts].sort((a, b) => b.price - a.price);
+  }
 
   const indexOfLastProduct = currentPage * itemsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
@@ -101,109 +93,68 @@ const Home = () => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
-    <div className="home bg-white pb-4">
+    <div className="home bg-white">
       <div className="container mx-auto mt-1 px-4 md:px-8">
-        {/* Banner Section */}
-        <div className="mb-8">
-          <div className="relative -mx-4 md:-mx-8 overflow-hidden">
-            {/* Mobile Banner */}
-            <div className="md:hidden">
-              <ImageSlider 
-                images={[banner, banner1, newyear]} 
-                interval={5000}
-              />
-            </div>
-
-            {/* Desktop Banner */}
-            <div className="hidden md:block">
-              <ImageSlider 
-                images={[bannerDesktop, bannerDesktop, bannerDesktop]} 
-                interval={3000}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Rest of the component remains the same */}
-        <h2 className="font-[times-new-roman] font-extrabold text-5xl md:text-4xl text-[#1F2232] text-center mb-2">
+        <h2 className="font-[times-new-roman] font-extrabold text-5xl md:text-4xl text-[#1F2232] text-center my-4">
           EXPLORE <span className="text-[#FF6F00]"> SANDRA'S</span>
         </h2>
 
-        {/* Category Filter Buttons */}
-        <div className="mb-6 overflow-x-auto">
-          <div className="flex gap-4 justify-start items-center font-slick">
-            <button
-              className={`px-6 py-2 transition hover:border-b-2 hover:border-[#FF6F00] ${
-                !filter
-                  ? "border-b-2 border-[#FF6F00] text-[#FF6F00] font-bold"
-                  : " text-gray-700"
-              }`}
-              onClick={() => setFilter(null)}
-            >
-              Home
-            </button>
-            {categories.map((category) => (
-              <button
-                key={category}
-                className={`px-6 py-2 transition hover:border-b-2 hover:border-[#FF6F00] ${
-                  filter === category
-                    ? "border-b-2 transition border-[#FF6F00] font-bold text-[#FF6F00]"
-                    : " text-gray-700"
-                }`}
-                onClick={() => setFilter(category)}
-              >
-                {category}
-              </button>
-            ))}
+        <CategoryFilterDropdown
+          categories={categories}
+          filter={filter}
+          setFilter={setFilter}
+          setCurrentPage={setCurrentPage}
+          sortOrder={sortOrder}
+          setSortOrder={setSortOrder}
+        />
+
+        <div>
+          <div className="flex justify-between items-center px-8 my-4">
+            <div className="flex items-center gap-2">
+              <span className="text-black/50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.875" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-credit-card-icon lucide-credit-card"><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></svg></span>
+              <span class="text-xs sm:text-sm text-black/50 font-poppins">Gcash Payment</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-black/50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.875" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-banknote-icon lucide-banknote"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></span>
+              <span class="text-xs sm:text-sm text-black/50 font-poppins">Cash on delivery</span>
+            </div>
           </div>
+
+        </div>
+        <div className="flex items-center justify-center px-2 pb-4 mb-4 border-b">
+          <h1 className="text-xs text-black/50 font-poppins text-center">Click on any product to view more details. Free delivery for orders within Madrid!</h1>
         </div>
 
-        {/* Product Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {loading
-            ? Array(4)
-                .fill()
-                .map((_, index) => (
-                  <div
-                    key={index}
-                    className="bg-white p-4 rounded-lg shadow-lg border border-neutral-300"
-                  >
-                    <Skeleton height={150} />
-                    <Skeleton height={20} className="mt-4" />
-                    <Skeleton height={15} width="80%" />
-                  </div>
-                ))
-            : currentProducts &&
-              currentProducts.length > 0 &&
-              currentProducts.map((product) => (
-                <div key={product._id}>
-                  <ProductCard product={product} />
-                </div>
-              ))}
+            ? Array(4).fill().map((_, index) => (
+              <div key={index} className="bg-white p-4 rounded-lg shadow-lg border border-neutral-300">
+                <Skeleton height={150} />
+                <Skeleton height={20} className="mt-4" />
+                <Skeleton height={15} width="80%" />
+              </div>
+            ))
+            : currentProducts?.map((product) => (
+              <ProductCard key={product._id} product={product} />
+            ))}
         </div>
 
-        {/* No Products Found */}
         {!loading && currentProducts?.length === 0 && (
           <p className="text-center text-gray-500 mt-8 text-lg">
             No products found in this category.
           </p>
         )}
 
-        {/* Pagination Controls */}
         <div className="flex justify-center gap-4 mt-8">
-          {filteredProducts && filteredProducts.length > itemsPerPage && (
+          {filteredProducts?.length > itemsPerPage && (
             <div className="flex gap-2">
-              {Array.from(
-                { length: Math.ceil(filteredProducts.length / itemsPerPage) },
-                (_, index) => index + 1
-              ).map((number) => (
+              {Array.from({ length: Math.ceil(filteredProducts.length / itemsPerPage) }, (_, index) => index + 1).map((number) => (
                 <button
                   key={number}
-                  className={`px-4 py-2 rounded-md ${
-                    number === currentPage
-                      ? "bg-[#FF6F00] text-white"
-                      : "bg-gray-300 text-black"
-                  }`}
+                  className={`px-4 py-2 rounded-md ${number === currentPage ? "bg-[#FF6F00] text-white" : "bg-gray-300 text-black"}`}
                   onClick={() => paginate(number)}
                 >
                   {number}
@@ -211,35 +162,6 @@ const Home = () => {
               ))}
             </div>
           )}
-        </div>
-      </div>
-      <SimpleModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-    </div>
-  );
-};
-
-const SimpleModal = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-700 bg-opacity-50 backdrop-blur-sm font-slick">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-100 mx-2">
-        <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
-          Welcome to{" "}
-          <span className="font-fuzzy text-[#FF6F00]"> Sandra's!</span>
-        </h2>
-        <p className="text-center mb-4 text-gray-600">
-          🎉 Enjoy an exclusive{" "}
-          <span className="text-[#FF6F00] font-semibold">20% OFF</span> on your
-          first purchase! Shop now and save more.
-        </p>
-        <div className="flex justify-center gap-4">
-          <button
-            className="bg-black text-white font-bold py-2 px-4 rounded-md hover:bg-[#FF6F00]"
-            onClick={onClose}
-          >
-            Continue
-          </button>
         </div>
       </div>
     </div>

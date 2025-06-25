@@ -1,9 +1,7 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
 
 const ProductCard = ({ product }) => {
-  
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -19,189 +17,94 @@ const ProductCard = ({ product }) => {
   };
 
   const thumbnail = product.thumbnail?.url;
+  const discount =
+    product.discountPercentage > 0 && product.price
+      ? product.price * (1 - product.discountPercentage / 100)
+      : null;
 
-  
+  const cardImageHeight = "h-[160px] sm:h-[180px]";
+
   if (product.stock <= 0) {
     return (
-      <div className="product-card  rounded-sm overflow-hidden border border-gray-300 transition-shadow duration-300 h-[500px] flex flex-col relative font-slick">
-        {/* Product Image with Sold Out Overlay */}
-        <div className="relative h-[50%] flex items-center justify-center">
+      <div className="rounded border border-gray-300 overflow-hidden font-slick flex flex-col">
+        <div className={`relative ${cardImageHeight} w-full`}>
           <img
-            src={thumbnail || '/placeholder.jpg'} 
+            src={thumbnail || "/placeholder.jpg"}
             alt={`${product.name} Thumbnail`}
-            className="h-full w-full object-cover transition-transform duration-300 "
+            className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <span className="text-white font-poppins text-4xl font-semibold uppercase tracking-wider">Sold Out</span>
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+            <span className="text-white text-xl font-bold uppercase">Sold Out</span>
           </div>
         </div>
-
-        {/* Product Details */}
-        <div className="p-4 flex flex-col justify-between h-[50%]">
-          <h3 className="text-2xl font-bold text-gray-800 line-clamp-2">{product.name}</h3>
-          <p className="text-gray-600 text-lg line-clamp-2 mt-2">{product.description}</p>
-
-          {/* Rating */}
-          <div className="flex items-center space-x-2 text-[.80rem]">
+        <div className="p-3 flex flex-col gap-1 text-sm">
+          <h3 className="font-bold line-clamp-2">{product.name}</h3>
+          <p className="text-gray-600 line-clamp-2">{product.description}</p>
+          <div className="flex items-center text-xs mt-1 gap-1">
             {renderStars(product.rating)}
-            <span className="text-gray-500 text-sm ml-2">{product.rating.toFixed(1)}</span>
-
-            {/* Reviews Count */}
-            <div className="text-gray-500 text-sm ml-2 font-slick">
-              {product.reviews.length > 0 ? (
-                <span>({product.reviews.length})</span>
-              ) : (
-                <span>No Reviews</span>
-              )}
-            </div>
+            <span className="text-gray-500 ml-1">{product.rating.toFixed(1)}</span>
+            <span className="text-gray-400 ml-1">
+              ({product.reviews?.length || "0"})
+            </span>
           </div>
-
-          {/* Pricing */}
-          <div className="flex flex-col">
+          <div className="mt-2">
             {product.discountPercentage > 0 ? (
               <>
-                <div className="font-slick flex-1">
-                  <span className="text-gray-500 line-through text-md">
-                    ₱{" "}
-                    {product.price.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                    })}
-                  </span>{" "}
-                  <span className="font-slick text-md text-gray-700">
-                    {product.discountPercentage}% Off
-                  </span>
+                <div className="text-xs text-gray-500 line-through">
+                  ₱ {product.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </div>
-                <span className="font-slick text-[1.5rem] font-bold text-gray-700">
-                  ₱{" "}
-                  {(
-                    product.price -
-                    product.price * (product.discountPercentage / 100)
-                  ).toLocaleString(undefined, { minimumFractionDigits: 0 })}
-                </span>
+                <div className="text-lg font-bold text-gray-700">
+                  ₱ {discount.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+                </div>
               </>
             ) : (
-              <span className="text-gray-700 font-slick text-[1.5rem] font-bold">
-                ₱{" "}
-                {product.price.toLocaleString(undefined, {
-                  minimumFractionDigits: 0,
-                })}
-              </span>
+              <div className="text-lg font-bold text-gray-700">
+                ₱ {product.price.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+              </div>
             )}
-          </div>
-
-          {/* Disabled View Button */}
-          <div className="flex justify-end font-poppins w-full">
-            <button
-              disabled
-              className="rounded-full bg-gray-400 text-white cursor-not-allowed font-semibold w-[140px] h-[40px] flex items-center justify-center mx-1"
-            >
-              View
-            </button>
           </div>
         </div>
       </div>
     );
   }
 
-  
-  const discount =
-    product.discountPercentage > 0 && product.price
-      ? product.price * (1 - product.discountPercentage / 100)
-      : null;
-
   return (
-    <div className="product-card bg-white rounded-sm overflow-hidden border border-gray-300 transition-shadow duration-300 h-[500px] flex flex-col relative font-slick">
-      {/* Product Thumbnail */}
-      <Link to={`/products/${product._id}`} className="relative block h-[60%]">
-        {thumbnail ? (
-          <img
-            src={thumbnail}
-            alt={`${product.name} Thumbnail`}
-            className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-          />
-        ) : (
-          <div className="h-full w-full bg-gray-200 flex items-center justify-center">
-            <span className="text-gray-500">No Image Available</span>
-          </div>
-        )}
+    <div className="rounded border border-gray-300 overflow-hidden font-slick flex flex-col">
+      <Link to={`/products/${product._id}`} className={`block ${cardImageHeight}`}>
+        <img
+          src={thumbnail || "/placeholder.jpg"}
+          alt={`${product.name} Thumbnail`}
+          className="w-full h-full object-cover hover:scale-105 transition-transform"
+        />
       </Link>
-
-      {/* Product Details */}
-      <div className="p-4 flex flex-col justify-between h-[40%]">
-        <div className="">
-          <h3 className="text-xl font-slick text-gray-800 line-clamp-2 font-bold">
-            {product.name}
-          </h3>
-          <p className="text-gray-600 text-lg line-clamp-1">{product.description}</p>
-        </div>
-        {/* Rating */}
-        <div className="flex items-center space-x-2 text-[.80rem]">
+      <div className="p-3 flex flex-col gap-1 text-sm">
+        <h3 className="font-bold line-clamp-2">{product.name}</h3>
+        <p className="text-gray-600 line-clamp-1">{product.description}</p>
+        <div className="flex items-center text-xs mt-1 gap-1">
           {renderStars(product.rating)}
-          <span className="text-gray-500 text-sm ml-2">{product.rating.toFixed(1)}</span>
-
-          {/* Reviews Count */}
-          <div className="text-gray-500 text-sm ml-2 font-slick">
-            {product.reviews.length > 0 ? (
-              <span>({product.reviews.length})</span>
-            ) : (
-              <span>No Reviews</span>
-            )}
-          </div>
+          <span className="text-gray-500 ml-1">{product.rating.toFixed(1)}</span>
+          <span className="text-gray-400 ml-1">
+            ({product.reviews?.length || "0"})
+          </span>
         </div>
-
-        {/* Pricing */}
-        <div className="flex flex-col">
-          {discount ? (
+        <div className="mt-2">
+          {product.discountPercentage > 0 ? (
             <>
-              <div className="font-slick flex-1">
-                <span className="text-gray-500 line-through text-md">
-                  ₱{" "}
-                  {product.price.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                  })}
-                </span>{" "}
-                <span className="font-slick text-md text-gray-700">
-                  {product.discountPercentage}% Off
-                </span>
+              <div className="text-xs text-gray-500 line-through">
+                ₱ {product.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </div>
-              <span className="font-slick text-[1.5rem] font-bold text-gray-700">
-                ₱{" "}
-                {(
-                  product.price -
-                  product.price * (product.discountPercentage / 100)
-                ).toLocaleString(undefined, { minimumFractionDigits: 0 })}
-              </span>
+              <div className="text-lg font-bold text-gray-700">
+                ₱ {discount.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+              </div>
             </>
           ) : (
-            <span className="text-gray-700 font-slick text-[1.5rem] font-bold">
-              ₱{" "}
-              {product.price.toLocaleString(undefined, {
-                minimumFractionDigits: 0,
-              })}
-            </span>
+            <div className="text-lg font-bold text-gray-700">
+              ₱ {product.price.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+            </div>
           )}
-        </div>
-        <div className="flex justify-end font-poppins w-full">
-          <CustomButton
-            title="View"
-            css="transition hover:border-[1px] hover:border-gray-400 bg-[#FF6F00] text-white hover:bg-white hover:text-[#FF6F00]"
-            link={`/products/${product._id}`}
-          />
         </div>
       </div>
     </div>
-  );
-};
-
-const CustomButton = ({ title, css, link }) => {
-  return (
-    <Link to={link}>
-      <button
-        className={`rounded-full ${css} font-semibold w-[140px] h-[40px] flex items-center justify-center mx-1`}
-      >
-        {title}
-      </button>
-    </Link>
   );
 };
 

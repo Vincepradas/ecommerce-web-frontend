@@ -13,7 +13,7 @@ const Reviews = ({ productId }) => {
 
   const { user, loading } = useContext(AuthContext);
   const isAuthenticated = !!localStorage.getItem("authToken");
-  const API_URL = "https://ecomwebapi-gsbbgmgbfubhc8hk.canadacentral-01.azurewebsites.net";
+  const API_URL = "https://ecom-sandras-g6abfyg2azbqekf8.southeastasia-01.azurewebsites.net/";
 
   const fetchReviews = useCallback(() => {
     fetch(`${API_URL}/api/products/${productId}`)

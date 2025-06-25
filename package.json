@@ -2,7 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "proxy": "https://ecomwebapi-gsbbgmgbfubhc8hk.canadacentral-01.azurewebsites.net",
+  "proxy": "https://ecom-sandras-g6abfyg2azbqekf8.southeastasia-01.azurewebsites.net/",
   "dependencies": {
     "@emotion/styled": "^11.13.5",
     "@material-tailwind/react": "^2.1.10",
