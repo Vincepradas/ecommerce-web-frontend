@@ -4,6 +4,19 @@
 @tailwind components;
 @tailwind utilities;
 
+.desktop-message {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .mobile-content {
+    display: none;
+  }
+  .desktop-message {
+    display: block;
+  }
+}
+
 .h-56 {
     height: 14rem;
 }

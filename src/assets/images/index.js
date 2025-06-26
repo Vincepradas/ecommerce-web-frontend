@@ -5,5 +5,6 @@ import banner1 from "./banner1.png";
 import newyear from "./newyear.png";
 import Welcome from './welcom.gif';
 import avatar from './avatar.png';
-const images = { avatar, banner, slash, bannerDesktop, banner1, newyear, Welcome };
+import signup_banner2 from './signup-banner2.png';
+const images = { avatar, banner, slash, bannerDesktop, banner1, newyear, Welcome, signup_banner2 };
 export default images;

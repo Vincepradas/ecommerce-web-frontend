@@ -158,8 +158,8 @@
               className="text-black hover:text-[#FF6F00] transition duration-300"
             >
               <img
-                width="25"
-                height="25"
+                width="20"
+                height="20"
                 src="https://img.icons8.com/fluency-systems-regular/50/search--v1.png"
                 alt="search--v1"
               />
@@ -169,8 +169,8 @@
               className="text-black hover:text-[#FF6F00] transition duration-300"
             >
               <img
-                width="24"
-                height="24"
+                width="20"
+                height="20"
                 src="https://img.icons8.com/fluency-systems-regular/50/shopping-bag--v1.png"
                 alt="shopping-bag--v1"
               />
@@ -181,8 +181,8 @@
               aria-label="Toggle menu"
             >
               <img
-                width="24"
-                height="24"
+                width="20"
+                height="20"
                 src="https://img.icons8.com/fluency-systems-regular/50/menu--v1.png"
                 alt="menu--v1"
               />
