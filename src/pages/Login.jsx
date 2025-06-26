@@ -25,12 +25,8 @@ const Login = () => {
 
   return (
     <div className="bg-white flex items-center justify-center px-2 font-poppins">
-      <div className="w-full max-w-md p-6 bg-white rounded-xl shadow-sm">
-<img
-  src={loginBanner}
-  alt="asdsadasd"
-  className="w-[75%] h-auto mb-5 mx-auto"
-/>
+      <div className="w-full max-w-md py-6 px-4 bg-white rounded-xl shadow-sm">
+
 
         {/* Title */}
         <Typography
@@ -40,9 +36,16 @@ const Login = () => {
           Sign In
         </Typography>
         <Typography variant="small" className="text-gray-600 text-left mb-6">
-          Enter your email and password to sign in.
+          You can also sign in with your google account.
         </Typography>
-
+        <img
+          src={loginBanner}
+          alt="asdsadasd"
+          className="w-full h-auto mb-5"
+        />
+        <Typography variant="small" className="text-gray-600 text-left mb-2">
+          Enter your email and password to continue.
+        </Typography>
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Email */}
@@ -110,13 +113,21 @@ const Login = () => {
             <p className="text-center text-red-500 text-sm">{error}</p>
           )}
 
+<div className="flex flex-col gap-1 text-sm">
           {/* Submit */}
           <button
             type="submit"
-            className="w-full py-2 mt-2 bg-orange-500 text-white font-medium rounded-md text-sm hover:bg-orange-600 transition duration-200"
+            className="w-full py-3 mt-2 bg-orange-500 text-white font-medium rounded-md text-sm hover:bg-orange-600 transition duration-200"
           >
             Sign In
           </button>
+                    <button
+            type="submit"
+            className="w-full py-3 mt-2 text-orange-500 border border-orange-500 font-medium rounded-md text-sm hover:bg-orange-600 transition duration-200"
+          >
+            Continue with Google
+          </button>
+          </div>
         </form>
 
         {/* Sign Up */}

@@ -32,16 +32,12 @@ const Signup = () => {
   };
 
   return (
-    <div className=" bg-white flex items-center justify-center font-poppins">
+    <div className="mt-5 bg-white flex items-center justify-center font-poppins">
       <div className="w-full max-w-md bg-white rounded-xl shadow-sm">
         {/* Image Banner */}
-        <img
-          src={signupBanner2}
-          alt="asdsadasd"
-          className="w-full h-auto"
-        />
 
-        <div className="px-8 pb-6">
+
+        <div className="px-6 pb-6">
           {/* Title */}
           <Typography
             variant="h4"
@@ -55,7 +51,11 @@ const Signup = () => {
           >
             Enter your details or sign up with your google account.
           </Typography>
-
+        <img
+          src={signupBanner2}
+          alt="asdsadasd"
+          className="w-full h-auto"
+        />
           {/* Message */}
           {message && (
             <p
