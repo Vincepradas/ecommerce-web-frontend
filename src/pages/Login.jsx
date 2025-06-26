@@ -22,103 +22,104 @@ const Login = () => {
   };
 
   return (
-    <div className=" font-poppins min-h-screen flex justify-center items-center bg-gradient-to-b from-white to-orange-50">
-      <div className=" p-8 sm:w-[400px]bg-gradient-to-t to-white from-orange-50">
-        {/* Title */}
-        <Typography
-          variant="h4"
-          className="text-orange-500 font-bold mb-2 text-center font-poppins"
-        >
-          Sign In
-        </Typography>
-        <Typography
-          className="text-gray-700 text-center mb-6"
-          variant="small"
-        >
-          Enter your email and password to sign in.
-        </Typography>
+ <div className="mt-10 bg-white flex items-center justify-center px-2 font-poppins">
+  <div className="w-full max-w-md p-6 bg-white rounded-xl shadow-sm">
+    {/* Title */}
+    <Typography
+      variant="h4"
+      className="text-orange-500 font-semibold text-left mb-2"
+    >
+      Sign In
+    </Typography>
+    <Typography
+      variant="small"
+      className="text-gray-600 text-left mb-6"
+    >
+      Enter your email and password to sign in.
+    </Typography>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
-          {/* Email Field */}
-          <div className="mb-4">
-            <label
-              htmlFor="email"
-              className="text-gray-700 text-sm font-medium"
-            >
-              Your Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              required
-              className="rounded-lg w-full mt-1 px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
-            />
-          </div>
-
-          {/* Password Field */}
-          <div className="mb-4">
-            <label
-              htmlFor="password"
-              className="text-gray-700 text-sm font-medium"
-            >
-              Your Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              required
-              className="rounded-lg w-full mt-1 px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
-            />
-          </div>
-
-          {/* Remember Me and Forgot Password */}
-          <div className="flex items-center justify-between mb-4">
-            <Checkbox
-              label="Remember Me"
-              containerProps={{ className: "text-sm text-gray-700" }}
-            />
-            <a
-              href="/forgot-password"
-              className="text-sm text-orange-500 hover:underline"
-            >
-              Forgot Password?
-            </a>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
-          )}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="w-full py-3 bg-gradient-to-r from-orange-500 to-yellow-500 text-white font-bold rounded-lg shadow-md hover:opacity-90 focus:ring-2 focus:ring-orange-400 transition duration-200"
-          >
-            Sign In
-          </button>
-        </form>
-
-        {/* Sign Up Link */}
-        <p className="text-center text-sm mt-4 text-gray-700">
-          Don’t have an account?{" "}
-          <Link
-            to="/signup"
-            className="font-medium text-orange-500 hover:underline"
-          >
-            Sign Up
-          </Link>
-        </p>
+    {/* Form */}
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Email */}
+      <div>
+        <label htmlFor="email" className="block text-sm text-gray-700 mb-1">
+          Email
+        </label>
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="w-full px-4 py-2 border text-sm border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
+          placeholder="you@example.com"
+        />
       </div>
-    </div>
+
+      {/* Password */}
+      <div>
+        <label htmlFor="password" className="block text-sm text-gray-700 mb-1">
+          Password
+        </label>
+        <input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
+          placeholder="••••••••"
+        />
+      </div>
+
+      {/* Remember Me & Forgot Password */}
+      <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            id="remember"
+            className="w-4 h-4 text-orange-500 rounded focus:ring-orange-400 border-gray-300"
+          />
+          <label htmlFor="remember" className="text-sm text-gray-700 select-none">
+            Save
+          </label>
+        </div>
+
+        <a
+          href="/forgot-password"
+          className="text-orange-500 hover:underline"
+        >
+          Forgot Password?
+        </a>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <p className="text-center text-red-500 text-sm">{error}</p>
+      )}
+
+      {/* Submit */}
+      <button
+        type="submit"
+        className="w-full py-2 mt-2 bg-orange-500 text-white font-medium rounded-md text-sm hover:bg-orange-600 transition duration-200"
+      >
+        Sign In
+      </button>
+    </form>
+
+    {/* Sign Up */}
+    <p className="text-center text-sm text-gray-600 mt-6">
+      Don’t have an account?{" "}
+      <Link
+        to="/signup"
+        className="text-orange-500 font-medium hover:underline"
+      >
+        Sign Up
+      </Link>
+    </p>
+  </div>
+</div>
+
   );
 };
 
