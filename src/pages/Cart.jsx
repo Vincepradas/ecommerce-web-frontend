@@ -2,14 +2,16 @@ import React, { useState, useEffect, useContext, useCallback } from "react";
 import AuthContext from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import Login from "./Login";
-import CartItem from "../components/CartItem";
+import CartItem from "../components/CartItem.jsx"
+
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [total, setTotal] = useState(0);
+  const [subtotal, setSubtotal] = useState(0);
+  const [selectedSubtotal, setSelectedSubtotal] = useState(0);
   const { user } = useContext(AuthContext);
   const API_URL = "https://ecom-sandras-g6abfyg2azbqekf8.southeastasia-01.azurewebsites.net/";
   const navigate = useNavigate();
@@ -33,7 +35,9 @@ const Cart = () => {
       .then((data) => {
         if (data.message === "Cart cleared successfully") {
           setCartItems([]);
-          setTotal(0);
+          setSubtotal(0);
+          setSelectedSubtotal(0);
+          setSelectedItems({});
         } else {
           setError(data.message || "Failed to clear cart");
         }
@@ -59,7 +63,9 @@ const Cart = () => {
         if (!res.ok) {
           if (res.status === 404) {
             setCartItems([]);
-            setTotal(0);
+            setSubtotal(0);
+            setSelectedSubtotal(0);
+            setSelectedItems({});
             return;
           }
           throw new Error("Failed to fetch cart items.");
@@ -71,12 +77,12 @@ const Cart = () => {
         const items = Array.isArray(data.items) ? data.items : [];
         setCartItems(items);
 
-        const totalAmount = items.reduce((acc, item) => {
+        const calculatedSubtotal = items.reduce((acc, item) => {
           const price = Number(item.productId?.price) || 0;
           const quantity = Number(item.quantity) || 0;
           return acc + price * quantity;
         }, 0);
-        setTotal(totalAmount);
+        setSubtotal(calculatedSubtotal);
 
         // Initialize selected items state
         const initialSelection = items.reduce((acc, item) => {
@@ -89,7 +95,6 @@ const Cart = () => {
       .finally(() => setLoading(false));
   }, [user]);
 
-  // Remove Item from Cart
   const removeFromCart = (productId) => {
     const token = user?.token || localStorage.getItem("authToken");
     if (!token) {
@@ -109,12 +114,27 @@ const Cart = () => {
       .then((data) => {
         if (data.cart) {
           setCartItems(data.cart.items);
-          setTotal(data.cart.totalAmount);
+          const newSubtotal = data.cart.items.reduce((acc, item) => {
+            const price = Number(item.productId?.price) || 0;
+            const quantity = Number(item.quantity) || 0;
+            return acc + price * quantity;
+          }, 0);
+          setSubtotal(newSubtotal);
 
           // Update selected items
           const updatedSelection = { ...selectedItems };
           delete updatedSelection[productId];
           setSelectedItems(updatedSelection);
+          
+          // Recalculate selected subtotal
+          const newSelectedSubtotal = data.cart.items
+            .filter(item => updatedSelection[item._id])
+            .reduce((acc, item) => {
+              const price = Number(item.productId?.price) || 0;
+              const quantity = Number(item.quantity) || 0;
+              return acc + price * quantity;
+            }, 0);
+          setSelectedSubtotal(newSelectedSubtotal);
         } else {
           setError(data.message || "Failed to remove item");
         }
@@ -129,14 +149,6 @@ const Cart = () => {
       return;
     }
   
-    // Calculate total price for selected items
-    const selectedTotal = selectedCartItems.reduce((acc, item) => {
-      const price = Number(item.productId?.price) || 0;
-      const quantity = Number(item.quantity) || 0;
-      return acc + price * quantity;
-    }, 0);
-  
-    // Navigate with selected items data
     navigate("/checkout", {
       state: {
         isDirectCheckout: false,
@@ -148,16 +160,40 @@ const Cart = () => {
           discountPercentage: item.productId.discountPercentage || 0,
           totalPrice: item.productId.price * item.quantity
         })),
-        totalAmount: selectedTotal
+        totalAmount: selectedSubtotal
       }
     });
   };
 
   const toggleSelection = (id) => {
-    setSelectedItems((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+    setSelectedItems((prev) => {
+      const newSelection = {
+        ...prev,
+        [id]: !prev[id],
+      };
+      
+      // Calculate new selected subtotal
+      const newSelectedSubtotal = cartItems
+        .filter(item => newSelection[item._id])
+        .reduce((acc, item) => {
+          const price = Number(item.productId?.price) || 0;
+          const quantity = Number(item.quantity) || 0;
+          return acc + price * quantity;
+        }, 0);
+      
+      setSelectedSubtotal(newSelectedSubtotal);
+      return newSelection;
+    });
+  };
+
+  const selectAllItems = () => {
+    const allSelected = cartItems.reduce((acc, item) => {
+      acc[item._id] = true;
+      return acc;
+    }, {});
+    
+    setSelectedItems(allSelected);
+    setSelectedSubtotal(subtotal);
   };
 
   useEffect(() => {
@@ -173,49 +209,97 @@ const Cart = () => {
   }
 
   return (
-    <div className="cart-section bg-white rounded-lg p-6 max-w-4xl mx-auto my-8 font-poppins">
-<div className="flex justify-between items-center mb-6 border-b">
-  <h2 className="text-2xl font-semibold text-black pb-2">Shopping Cart</h2>
-  <Link to='/orders' className="border rounded-lg px-4 py-2 mb-2 bg-black text-white">MY ORDERS</Link>
-</div>
-
+    <div className="cart-section bg-white rounded-lg p-4 md:p-6 max-w-4xl mx-auto my-4 md:my-8 font-poppins">
+      <div className="flex justify-between items-center mb-6 border-b pb-4">
+        <h2 className="text-xl font-medium text-black">Shopping Cart</h2>
+        <Link to='/orders' className="border rounded-lg px-4 py-2 bg-black text-white text-sm md:text-base">
+          MY ORDERS
+        </Link>
+      </div>
+      
+      <div className="bg-blue-50 text-blue-800 p-3 rounded-lg mb-6 text-sm">
+        <span className="font-semibold">MOBILE OPTIMIZED</span> Easy checkout on any device
+      </div>
       
       <div className="cart-items-list space-y-4 mb-6">
         {cartItems.length > 0 ? (
-          cartItems.map((item) => (
-            <CartItem
-              key={item._id}
-              item={item}
-              selectedItems={selectedItems}
-              toggleSelection={toggleSelection}
-              removeFromCart={removeFromCart}
-            />
-          ))
+          <>
+            <div className="flex justify-between items-center">
+              <label className="flex items-center space-x-2">
+                <input 
+                  type="checkbox" 
+                  checked={cartItems.every(item => selectedItems[item._id])}
+                  onChange={selectAllItems}
+                  className="h-5 w-5 text-black rounded"
+                />
+                <span className="text-sm font-medium">Select all</span>
+              </label>
+              <button 
+                onClick={clearCart}
+                className="text-red-600 hover:text-red-800 text-sm font-medium"
+              >
+                Clear Cart
+              </button>
+            </div>
+            
+            {cartItems.map((item) => (
+              <CartItem
+                key={item._id}
+                item={item}
+                selected={selectedItems[item._id] || false}
+                toggleSelection={toggleSelection}
+                removeFromCart={removeFromCart}
+              />
+            ))}
+          </>
         ) : (
-          <p className="text-center text-gray-500">Your cart is empty.</p>
+          <div className="text-center py-8">
+            <p className="text-gray-500 mb-4">Your cart is empty.</p>
+            <Link 
+              to="/" 
+              className="inline-block bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800"
+            >
+              Continue Shopping
+            </Link>
+          </div>
         )}
       </div>
 
-      <div className="border-t pt-4">
-        <div className="flex justify-between items-center mb-4">
-          <p className="text-lg font-semibold">Total:</p>
-          <p className="text-lg font-bold">PHP {total.toFixed(2)}</p>
-        </div>
-        <div className="flex space-x-4">
+      {cartItems.length > 0 && (
+        <div className="border-t pt-6">
+          <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
+          
+          <div className="space-y-3 mb-6">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Subtotal</span>
+              <span className="font-medium font-slick">PHP {selectedSubtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Shipping</span>
+              <span className="font-medium text-green-600">Free</span>
+            </div>
+            <div className="border-t pt-3 flex justify-between">
+              <span className="font-semibold">Total</span>
+              <span className="font-bold text-lg font-slick">PHP {selectedSubtotal.toFixed(2)}</span>
+            </div>
+          </div>
+          
+          <div className="bg-gray-50 p-3 rounded-lg mb-6 text-sm text-gray-600">
+            <span className="font-semibold">TRANSPARENCY</span> - No hidden fees
+          </div>
+          
           <button
-            className="w-1/2 py-2 rounded bg-black text-white hover:bg-gray-800"
+            className="w-full py-3 rounded-lg bg-black text-white hover:bg-gray-800 font-medium"
             onClick={handleCheckout}
           >
-            Checkout
+            Check out
           </button>
-          <button
-            className="w-1/2 py-2 rounded bg-black text-white hover:bg-gray-800"
-            onClick={clearCart}
-          >
-            Clear Cart
-          </button>
+          
+          <div className="mt-4 text-center text-sm text-gray-500">
+            <span className="font-semibold">MINIMUM FRICTION</span> - Quick and easy checkout
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

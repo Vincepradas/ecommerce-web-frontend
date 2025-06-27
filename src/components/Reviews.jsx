@@ -89,13 +89,13 @@ const Reviews = ({ productId }) => {
   return (
     <div className="reviews-section bg-white rounded-lg">
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Customer Reviews</h2>
+      <h2 className="text-xl font-medium mb-4 text-[#1F2232] font-poppins">Customer Reviews</h2>
       <div className="reviews-list space-y-4 mb-6">
         {displayedReviews.length > 0 ? (
           displayedReviews.map((review, index) => (
             review && (
               <div key={index} className="review bg-gray-100 p-3 rounded-md shadow-sm">
-                <h1 className="text-gray-600 font-bold">{review.reviewerName}</h1>
+                <h1 className="text-gray-600 font-medium">{review.reviewerName}</h1>
                 <div className="flex items-center space-x-1 mb-1">
                   {[...Array(5)].map((_, i) => (
                     <FaStar
