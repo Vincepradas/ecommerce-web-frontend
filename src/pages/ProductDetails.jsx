@@ -15,7 +15,7 @@ import "../style/ProductDetails.css";
 import AuthContext from "../context/AuthContext";
 import useFetch from "../hooks/useFetch";
 import ProductCard from "../components/ProductCard";
-
+import { ChevronLeft } from "lucide-react";
 
 const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
@@ -120,13 +120,15 @@ const ProductDetails = () => {
   return (
     <div className="product-details container mx-auto px-4 py-6 md:px-6 md:py-12 font-poppins">
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-4 text-lg text-black/75 underline font-poppins"
-      >
-        Back
-      </button>
+      <div className="flex items-center mb-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1 text-lg text-black/75 font-poppins"
+        >
+          <ChevronLeft size={20} />
+          Back
+        </button>
+      </div>
 
       <div className="flex flex-col md:flex-row gap-6 items-start md:items-start mb-8">
         <div className="w-full md:w-1/2">
