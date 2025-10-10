@@ -13,7 +13,7 @@ import "react-loading-skeleton/dist/skeleton.css";
 import { motion } from "framer-motion";
 import "../style/ProductDetails.css";
 import AuthContext from "../context/AuthContext";
-import useFetch from "../hooks/useFetch";
+import { useProductContext } from "../context/ProductContext";
 import ProductCard from "../components/ProductCard";
 import { ChevronLeft } from "lucide-react";
 
@@ -21,23 +21,23 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const { id } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [product, setProduct] = useState({});
-  const [loading, setLoading] = useState(true);
   const [showFullDesc, setShowFullDesc] = useState(false);
   const swiperRef = useRef(null);
   const isAuthenticated = !!localStorage.getItem("authToken");
   const { user } = useContext(AuthContext);
+  const { fetchProductById, getProduct, isProductLoading } = useProductContext();
   const navigate = useNavigate();
+  
+  const product = getProduct(id) || {};
+  const loading = isProductLoading(id);
 
   useEffect(() => {
-    fetch(`${config.REACT_APP_API_URL}/products?id=${id}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setProduct(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [id]);
+    if (id && !getProduct(id)) {
+      fetchProductById(id).catch((error) => {
+        console.error('Error fetching product:', error);
+      });
+    }
+  }, [id, fetchProductById, getProduct]);
 
   const discountedPrice = useMemo(() => {
     if (product.discountPercentage) {
@@ -62,13 +62,18 @@ const ProductDetails = () => {
   };
 
   const handleCheckout = () => {
+    if (!product._id || !product.price) {
+      alert("Product information is not available. Please try again.");
+      return;
+    }
+
     const originalPrice = product.price;
     const finalPrice = discountedPrice || originalPrice;
     const totalPrice = finalPrice * quantity;
 
     const checkoutItem = {
       productId: product._id,
-      productName: product.name,
+      productName: product.name || "Unknown Product",
       quantity: quantity,
       price: originalPrice,
       discountPercentage: product.discountPercentage || 0,
@@ -148,7 +153,7 @@ const ProductDetails = () => {
                     <SwiperSlide key={index}>
                       <img
                         src={mediaItem.url}
-                        alt={`${product.name} ${index + 1}`}
+                        alt={`${product.name || 'Product'} ${index + 1}`}
                         className="w-[350px] h-auto object-cover mx-auto"
                       />
                     </SwiperSlide>
@@ -178,28 +183,34 @@ const ProductDetails = () => {
           ) : (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
               <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-2">
-                {product.name}
+                {product.name || "Loading..."}
               </h1>
               <p className="text-base md:text-lg text-gray-600 mb-2">
-                {showFullDesc || product.description.length < 150
-                  ? product.description
-                  : `${product.description.slice(0, 150)}...`}
-                {product.description.length > 150 && (
-                  <span
-                    onClick={() => setShowFullDesc(!showFullDesc)}
-                    className="text-blue-500 ml-1 cursor-pointer text-sm"
-                  >
-                    {showFullDesc ? "See less" : "See more"}
-                  </span>
+                {product.description ? (
+                  <>
+                    {showFullDesc || product.description.length < 150
+                      ? product.description
+                      : `${product.description.slice(0, 150)}...`}
+                    {product.description.length > 150 && (
+                      <span
+                        onClick={() => setShowFullDesc(!showFullDesc)}
+                        className="text-blue-500 ml-1 cursor-pointer text-sm"
+                      >
+                        {showFullDesc ? "See less" : "See more"}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  "Loading description..."
                 )}
               </p>
               <p className="text-base md:text-lg text-gray-600 mb-4">
-                <span className="font-bold">Item: </span> {product.category}
+                <span className="font-bold">Item: </span> {product.category || "Unknown"}
               </p>
               <p className="text-base md:text-lg text-gray-600 mb-4 font-bold">
-                <span className="font-bold"></span> {product.stock} Left
+                <span className="font-bold"></span> {product.stock || 0} Left
               </p>
-              {product.discountPercentage > 0 && (
+              {(product.discountPercentage || 0) > 0 && (
                 <p className="text-base text-green-600 font-bold mb-4 font-slick">
                   Save {product.discountPercentage}% Off
                 </p>
@@ -208,15 +219,15 @@ const ProductDetails = () => {
                 {[...Array(5)].map((_, i) => (
                   <FaStar
                     key={i}
-                    className={i < product.rating ? "text-yellow-500" : "text-gray-300"}
+                    className={i < (product.rating || 0) ? "text-yellow-500" : "text-gray-300"}
                   />
                 ))}
-                <span className="text-gray-500">{product.rating} ( {product.reviews?.length || 0} Reviews )</span>
+                <span className="text-gray-500">{product.rating || 0} ( {product.reviews?.length || 0} Reviews )</span>
               </div>
 
               <div className="mt-4 flex justify-between">
                 <div>
-                  {discountedPrice ? (
+                  {discountedPrice && product.price ? (
                     <>
                       <p className="text-lg text-gray-500 line-through font-slick">
                         {formatPrice(product.price)}
@@ -225,9 +236,13 @@ const ProductDetails = () => {
                         {formatPrice(discountedPrice)}
                       </p>
                     </>
-                  ) : (
+                  ) : product.price ? (
                     <p className="text-2xl font-bold text-[#1F2232] font-slick">
                       {formatPrice(product.price)}
+                    </p>
+                  ) : (
+                    <p className="text-lg text-gray-500 font-slick">
+                      Price not available
                     </p>
                   )}
                 </div>
@@ -240,17 +255,29 @@ const ProductDetails = () => {
               </div>
 
               <div className="mt-6 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-                <PrimaryButton onClick={() => handleAction(() => handleCheckout())}>Buy Now</PrimaryButton>
-                <SecondaryButton onClick={async () => {
-                  try {
-                    await handleAction(async () => {
-                      await addToCartAPI(product._id, quantity);
-                      alert(`${product.name} has been added to the cart!`);
-                    });
-                  } catch {
-                    alert("Failed to add product to cart. Please try again.");
-                  }
-                }}>Add to Cart</SecondaryButton>
+                <PrimaryButton 
+                  onClick={() => handleAction(() => handleCheckout())}
+                  disabled={!product._id || loading}
+                >
+                  Buy Now
+                </PrimaryButton>
+                <SecondaryButton 
+                  onClick={async () => {
+                    try {
+                      await handleAction(async () => {
+                        if (product._id) {
+                          await addToCartAPI(product._id, quantity);
+                          alert(`${product.name || 'Product'} has been added to the cart!`);
+                        }
+                      });
+                    } catch {
+                      alert("Failed to add product to cart. Please try again.");
+                    }
+                  }}
+                  disabled={!product._id || loading}
+                >
+                  Add to Cart
+                </SecondaryButton>
               </div>
             </motion.div>
           )}
@@ -259,7 +286,7 @@ const ProductDetails = () => {
 
       <Reviews productId={id} />
 
-      {!loading && (
+      {!loading && product._id && (
         <div className="mt-12">
           <h2 className="text-xl font-medium mb-4 text-[#1F2232] font-poppins">
             You Might Also Like
@@ -272,7 +299,15 @@ const ProductDetails = () => {
 };
 
 const RecommendedProducts = ({ currentProductId }) => {
-  const { data: allProducts, loading } = useFetch(`${config.REACT_APP_API_URL}/products`);
+  const { allProducts, allProductsLoading, fetchAllProducts } = useProductContext();
+
+  React.useEffect(() => {
+    if (!allProducts) {
+      fetchAllProducts().catch((error) => {
+        console.error('Error fetching all products:', error);
+      });
+    }
+  }, [allProducts, fetchAllProducts]);
 
   const getRandomProducts = (products, excludeId, count = 4) => {
     const filtered = products.filter((p) => p._id !== excludeId);
@@ -284,6 +319,7 @@ const RecommendedProducts = ({ currentProductId }) => {
   };
 
   const recommended = allProducts ? getRandomProducts(allProducts, currentProductId) : [];
+  const loading = allProductsLoading;
 
   if (loading) {
     return (

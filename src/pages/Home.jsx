@@ -1,13 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import ProductCard from "../components/ProductCard";
-import useFetch from "../hooks/useFetch";
-import config from "../config";
+import { useProductContext } from "../context/ProductContext";
 
 const CategoryFilterDropdown = ({ categories, filter, setFilter, setCurrentPage, sortOrder, setSortOrder }) => {
   const [showFilters, setShowFilters] = useState(false);
-
+  console.log(process.env.REACT_APP_API_URL);
   return (
     <div className="mt-4 font-[400] rounded-md p-2 max-w-sm mx-auto text-left border-b">
       <div className="flex justify-between items-center bg-white py-2 rounded-md">
@@ -69,13 +68,23 @@ const CategoryFilterDropdown = ({ categories, filter, setFilter, setCurrentPage,
 };
 
 const Home = () => {
-  const { data: products, loading } = useFetch(`${process.env.REACT_APP_API_URL}/products`);
+  const { allProducts, allProductsLoading, fetchAllProducts } = useProductContext();
   const [filter, setFilter] = useState(null);
   const [sortOrder, setSortOrder] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  console.log("API url", process.env.REACT_APP_API_URL)
+  useEffect(() => {
+    if (!allProducts) {
+      fetchAllProducts().catch((error) => {
+        console.error('Error fetching all products:', error);
+      });
+    }
+  }, [allProducts, fetchAllProducts]);
+
+  const products = allProducts;
+  const loading = allProductsLoading;
+
   const categories = [...new Set(products?.map((product) => product.category))];
 
   let filteredProducts = products?.filter((product) =>
