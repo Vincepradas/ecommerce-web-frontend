@@ -13,10 +13,10 @@ const Cart = () => {
   const [subtotal, setSubtotal] = useState(0);
   const [selectedSubtotal, setSelectedSubtotal] = useState(0);
   const { user } = useContext(AuthContext);
-  const API_URL = "https://ecom-sandras-g6abfyg2azbqekf8.southeastasia-01.azurewebsites.net/";
+  const REACT_APP_API_URL = process.env.REACT_APP_API_URL;
   const navigate = useNavigate();
 
-  // Clear Cart
+  
   const clearCart = () => {
     const token = user?.token || localStorage.getItem("authToken");
     if (!token) {
@@ -24,7 +24,7 @@ const Cart = () => {
       return;
     }
 
-    fetch(`${API_URL}/api/cart/clear`, {
+    fetch(`${REACT_APP_API_URL}/cart/clear`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -53,7 +53,7 @@ const Cart = () => {
       return;
     }
 
-    fetch(`${API_URL}/api/cart`, {
+    fetch(`${REACT_APP_API_URL}/cart`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -84,7 +84,7 @@ const Cart = () => {
         }, 0);
         setSubtotal(calculatedSubtotal);
 
-        // Initialize selected items state
+        
         const initialSelection = items.reduce((acc, item) => {
           acc[item._id] = false;
           return acc;
@@ -102,7 +102,7 @@ const Cart = () => {
       return;
     }
 
-    fetch(`${API_URL}/api/cart/remove`, {
+    fetch(`${REACT_APP_API_URL}/cart/remove`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -121,12 +121,12 @@ const Cart = () => {
           }, 0);
           setSubtotal(newSubtotal);
 
-          // Update selected items
+          
           const updatedSelection = { ...selectedItems };
           delete updatedSelection[productId];
           setSelectedItems(updatedSelection);
+
           
-          // Recalculate selected subtotal
           const newSelectedSubtotal = data.cart.items
             .filter(item => updatedSelection[item._id])
             .reduce((acc, item) => {
@@ -148,7 +148,7 @@ const Cart = () => {
       alert("Please select at least one item to checkout.");
       return;
     }
-  
+
     navigate("/checkout", {
       state: {
         isDirectCheckout: false,
@@ -171,8 +171,8 @@ const Cart = () => {
         ...prev,
         [id]: !prev[id],
       };
+
       
-      // Calculate new selected subtotal
       const newSelectedSubtotal = cartItems
         .filter(item => newSelection[item._id])
         .reduce((acc, item) => {
@@ -180,7 +180,7 @@ const Cart = () => {
           const quantity = Number(item.quantity) || 0;
           return acc + price * quantity;
         }, 0);
-      
+
       setSelectedSubtotal(newSelectedSubtotal);
       return newSelection;
     });
@@ -191,7 +191,7 @@ const Cart = () => {
       acc[item._id] = true;
       return acc;
     }, {});
-    
+
     setSelectedItems(allSelected);
     setSelectedSubtotal(subtotal);
   };
@@ -216,32 +216,32 @@ const Cart = () => {
           MY ORDERS
         </Link>
       </div>
-      
+
       <div className="bg-blue-50 text-blue-800 p-3 rounded-lg mb-6 text-sm">
         <span className="font-semibold">MOBILE OPTIMIZED</span> Easy checkout on any device
       </div>
-      
+
       <div className="cart-items-list space-y-4 mb-6">
         {cartItems.length > 0 ? (
           <>
             <div className="flex justify-between items-center">
               <label className="flex items-center space-x-2">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={cartItems.every(item => selectedItems[item._id])}
                   onChange={selectAllItems}
                   className="h-5 w-5 text-black rounded"
                 />
                 <span className="text-sm font-medium">Select all</span>
               </label>
-              <button 
+              <button
                 onClick={clearCart}
                 className="text-red-600 hover:text-red-800 text-sm font-medium"
               >
                 Clear Cart
               </button>
             </div>
-            
+
             {cartItems.map((item) => (
               <CartItem
                 key={item._id}
@@ -255,8 +255,8 @@ const Cart = () => {
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-500 mb-4">Your cart is empty.</p>
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="inline-block bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800"
             >
               Continue Shopping
@@ -268,7 +268,7 @@ const Cart = () => {
       {cartItems.length > 0 && (
         <div className="border-t pt-6">
           <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
-          
+
           <div className="space-y-3 mb-6">
             <div className="flex justify-between">
               <span className="text-gray-600">Subtotal</span>
@@ -283,18 +283,18 @@ const Cart = () => {
               <span className="font-bold text-lg font-slick">PHP {selectedSubtotal.toFixed(2)}</span>
             </div>
           </div>
-          
+
           <div className="bg-gray-50 p-3 rounded-lg mb-6 text-sm text-gray-600">
             <span className="font-semibold">TRANSPARENCY</span> - No hidden fees
           </div>
-          
+
           <button
             className="w-full py-3 rounded-lg bg-black text-white hover:bg-gray-800 font-medium"
             onClick={handleCheckout}
           >
             Check out
           </button>
-          
+
           <div className="mt-4 text-center text-sm text-gray-500">
             <span className="font-semibold">MINIMUM FRICTION</span> - Quick and easy checkout
           </div>

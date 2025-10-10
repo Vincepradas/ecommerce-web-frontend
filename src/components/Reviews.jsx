@@ -13,10 +13,11 @@ const Reviews = ({ productId }) => {
 
   const { user, loading } = useContext(AuthContext);
   const isAuthenticated = !!localStorage.getItem("authToken");
-  const API_URL = "https://ecom-sandras-g6abfyg2azbqekf8.southeastasia-01.azurewebsites.net/";
-
+  const REACT_APP_API_URL = process.env.REACT_APP_API_URL;
+  
+  
   const fetchReviews = useCallback(() => {
-    fetch(`${API_URL}/api/products/${productId}`)
+    fetch(`${REACT_APP_API_URL}/products?id=${productId}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.error) {
@@ -47,7 +48,7 @@ const Reviews = ({ productId }) => {
       return;
     }
 
-    fetch(`${API_URL}/api/products/${productId}/reviews`, {
+    fetch(`${REACT_APP_API_URL}/products/${productId}/reviews`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

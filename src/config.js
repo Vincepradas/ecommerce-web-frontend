@@ -1,9 +1,10 @@
 const dev={
-    API_URL:"https://ecom-sandras-g6abfyg2azbqekf8.southeastasia-01.azurewebsites.net//api"
+    REACT_APP_API_URL:`${process.env.REACT_APP_API_URL}`
 }
 
 const prod={
-    API_URL:"https://ecom-sandras-g6abfyg2azbqekf8.southeastasia-01.azurewebsites.net//api"
+    REACT_APP_API_URL:`${process.env.REACT_APP_API_URL}`
 }
+
 const config=process.env.NODE_ENV==='development'?dev:prod
 export default  config

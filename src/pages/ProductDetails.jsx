@@ -30,7 +30,7 @@ const ProductDetails = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch(`${config.API_URL}/products/${id}`)
+    fetch(`${config.REACT_APP_API_URL}/products?id=${id}`)
       .then((res) => res.json())
       .then((data) => {
         setProduct(data);
@@ -95,7 +95,7 @@ const ProductDetails = () => {
     const token = user?.token || localStorage.getItem("authToken");
     if (!token) return;
 
-    const url = `${config.API_URL}/cart/add`;
+    const url = `${config.REACT_APP_API_URL}/cart/add`;
     const payload = { productId, quantity };
 
     try {
@@ -272,7 +272,7 @@ const ProductDetails = () => {
 };
 
 const RecommendedProducts = ({ currentProductId }) => {
-  const { data: allProducts, loading } = useFetch(`${config.API_URL}/products`);
+  const { data: allProducts, loading } = useFetch(`${config.REACT_APP_API_URL}/products`);
 
   const getRandomProducts = (products, excludeId, count = 4) => {
     const filtered = products.filter((p) => p._id !== excludeId);

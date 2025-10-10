@@ -35,7 +35,7 @@ const ProfilePage = () => {
 
       try {
         const response = await axios.get(
-          "https://ecom-sandras-g6abfyg2azbqekf8.southeastasia-01.azurewebsites.net/api/user",
+          `${process.env.REACT_APP_API_URL}/user`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

@@ -100,7 +100,7 @@ const Checkout = () => {
 
       setLoading(true);
       try {
-        const response = await fetch(`${config.API_URL}/user/`, {
+        const response = await fetch(`${config.REACT_APP_API_URL}/user/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) throw new Error("Failed to fetch user info");
@@ -137,7 +137,7 @@ const Checkout = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${config.API_URL}/user/address/${userID}/add`, {
+      const response = await fetch(`${config.REACT_APP_API_URL}/user/address/${userID}/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -160,93 +160,95 @@ const Checkout = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!paymentMethod || !selectedAddress) {
-      alert("Please fill in all required fields");
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!paymentMethod || !selectedAddress) {
+    alert("Please fill in all required fields");
+    return;
+  }
+
+  const token = user?.token || localStorage.getItem("authToken");
+  if (!token) return;
+
+  setLoading(true);
+  try {
+    let orderPayload;
+
+    if (isDirectCheckout && directItemData) {
+      // For direct checkout (Buy Now), DO NOT remove from cart
+      // Just create the order with the specific item
+      orderPayload = {
+        paymentMethod,
+        address: selectedAddress,
+        products: [{
+          productId: directItemData.productId,
+          productName: directItemData.productName,
+          quantity: directItemData.quantity,
+          price: directItemData.price,
+          discountPercentage: directItemData.discountPercentage,
+          totalPrice: directItemData.totalPrice,
+        }],
+        totalAmount: directItemData.totalPrice,
+        isDirectCheckout: true, // Flag to tell backend this is a direct checkout
+      };
+    } else if (location.state?.cartItems) {
+      // For cart checkout, prepare the payload
+      orderPayload = {
+        paymentMethod,
+        address: selectedAddress,
+        products: location.state.cartItems,
+        totalAmount: location.state.totalAmount,
+        isDirectCheckout: false,
+      };
+    } else {
+      alert("Invalid checkout data");
       return;
     }
 
-    const token = user?.token || localStorage.getItem("authToken");
-    if (!token) return;
+    // Create the order
+    const orderResponse = await fetch(`${config.REACT_APP_API_URL}/orders`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(orderPayload),
+    });
 
-    setLoading(true);
-    try {
-      let orderPayload;
-      if (isDirectCheckout && directItemData) {
-        orderPayload = {
-          paymentMethod,
-          address: selectedAddress,
-          products: [{
-            productId: directItemData.productId,
-            productName: directItemData.productName,
-            quantity: directItemData.quantity,
-            price: directItemData.price,
-            discountPercentage: directItemData.discountPercentage,
-            totalPrice: directItemData.totalPrice,
-          }],
-          totalAmount: directItemData.totalPrice,
-        };
-
-        // For direct checkout, remove just this item from cart
-        const removeResponse = await fetch(`${config.API_URL}/cart/remove`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ productId: directItemData.productId }),
-        });
-
-        if (!removeResponse.ok) {
-          console.warn("Failed to remove item from cart, but order was placed");
-        }
-      } else if (location.state?.cartItems) {
-        orderPayload = {
-          paymentMethod,
-          address: selectedAddress,
-          products: location.state.cartItems,
-          totalAmount: location.state.totalAmount,
-        };
-
-        // For regular checkout, clear the entire cart
-        const clearResponse = await fetch(`${config.API_URL}/cart/clear`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!clearResponse.ok) {
-          console.warn("Failed to clear cart, but order was placed");
-        }
-      } else {
-        alert("Invalid checkout data");
-        return;
-      }
-
-      // Create the order
-      const orderResponse = await fetch(`${config.API_URL}/orders`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(orderPayload),
-      });
-
-      if (!orderResponse.ok) {
-        throw new Error("Failed to create order");
-      }
-
-      navigate("/orders", { state: { orderSuccess: true } });
-    } catch (error) {
-      console.error("Error in checkout process:", error);
-      alert("There was an error processing your order. Please try again.");
-    } finally {
-      setLoading(false);
+    if (!orderResponse.ok) {
+      throw new Error("Failed to create order");
     }
-  };
+
+    // ONLY clear cart items if this is a cart checkout (not direct checkout)
+    if (!isDirectCheckout && location.state?.cartItems) {
+      // Remove only the specific items that were checked out from cart
+      const productIdsToRemove = location.state.cartItems.map(item => item.productId);
+      
+      try {
+        // Remove each checked out item from the cart
+        for (const productId of productIdsToRemove) {
+          await fetch(`${config.REACT_APP_API_URL}/cart/remove`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ productId }),
+          });
+        }
+      } catch (clearError) {
+        console.warn("Error removing checked out items from cart:", clearError);
+      }
+    }
+
+    navigate("/orders", { state: { orderSuccess: true } });
+  } catch (error) {
+    console.error("Error in checkout process:", error);
+    alert("There was an error processing your order. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const OrderItem = ({ item }) => {
     // Add null checks for the item prop

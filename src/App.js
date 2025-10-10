@@ -11,6 +11,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Profile from "./pages/Profile";
 import Orders from "./pages/Orders";
+import Admin from "./pages/Admin.jsx";
 
 import { Route, Routes } from "react-router-dom";
 const App = () => {
@@ -28,6 +29,7 @@ const App = () => {
             <Route path="/signup" element={<Signup />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/orders" element={<Orders />} />
+            <Route path="/page/admin" element={<Admin />} />
           </Routes>
           <Footer />
         </div>

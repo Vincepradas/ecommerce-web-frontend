@@ -58,7 +58,7 @@ const OrderTimeline = ({ order }) => {
   const steps = [
     {
       title: "Order Placed",
-      date: order.createdAt,
+      date: order.orderDate || order.createdAt,
       icon: <Clock size={18} />,
       completed: true
     },
@@ -66,7 +66,7 @@ const OrderTimeline = ({ order }) => {
       title: "Payment Confirmed",
       date: order.paymentConfirmedAt,
       icon: <CreditCard size={18} />,
-      completed: order.status !== 'pending'
+      completed: order.status !== 'pending' && order.status !== 'cancelled'
     },
     {
       title: "Processing",
@@ -82,40 +82,59 @@ const OrderTimeline = ({ order }) => {
     },
     {
       title: "Delivered",
-      date: order.deliveredAt,
+      date: order.deliveredAt || (order.status === 'completed' ? order.updatedAt : null),
       icon: <Home size={18} />,
       completed: order.status === 'completed'
     }
   ];
 
+  const formatDate = (dateString) => {
+    if (!dateString) return null;
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return null;
+      
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return null;
+    }
+  };
+
   return (
     <div className="space-y-6 mt-6 font-poppins">
       {steps.map((step, index) => (
         <div key={index} className="flex items-start gap-4 relative">
-          {/* Vertical line */}
           {index < steps.length - 1 && (
             <div className={`absolute left-[18px] top-[28px] w-0.5 h-10 ${step.completed ? 'bg-orange-500' : 'bg-gray-200'}`}></div>
           )}
 
-          {/* Icon */}
-          <div className={`rounded-full p-2 ${step.completed ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
+          <div className={`rounded-full p-2 flex-shrink-0 ${step.completed ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
             {step.icon}
           </div>
 
-          {/* Content */}
           <div className="flex-1">
             <p className={`font-medium ${step.completed ? 'text-gray-900' : 'text-gray-500'}`}>
               {step.title}
             </p>
-            {step.date && (
+            {step.date ? (
               <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
                 <Calendar size={14} />
-                <span>{new Date(step.date).toLocaleString()}</span>
+                <span>{formatDate(step.date)}</span>
               </div>
-            )}
-            {index === 0 && (
+            ) : step.completed ? (
+              <div className="text-sm text-gray-400 mt-1 italic">
+                Date not available
+              </div>
+            ) : null}
+            {index === 0 && order._id && (
               <div className="mt-2 text-sm text-gray-500">
-                Order #: {order._id?.slice(-8).toUpperCase() ?? "N/A"}
+                Order #: {order._id.slice(-8).toUpperCase()}
               </div>
             )}
           </div>
@@ -143,11 +162,11 @@ const OrderCard = ({ order, onClick }) => {
             <div className="flex items-center gap-2">
               <Calendar size={16} className="text-gray-400" />
               <span className="text-sm text-gray-500">
-                {new Date(order.createdAt).toLocaleDateString()}
+                {new Date(order.createdAt || order.orderDate).toLocaleDateString()}
               </span>
             </div>
             <h3 className="font-medium mt-1">
-              {order.products[0].name}
+              {order.products[0]?.name || 'Unknown Product'}
               {order.products.length > 1 && ` +${order.products.length - 1} more`}
             </h3>
           </div>
@@ -188,9 +207,7 @@ const OrderCard = ({ order, onClick }) => {
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Truck size={16} className="text-gray-400" />
-                  <span className="text-gray-600">
-                    {order.status === 'shipped' ? 'In transit' : order.status}
-                  </span>
+                  <span className="text-gray-600">{order.shippingStatus}</span>
                 </div>
               </div>
 
@@ -214,7 +231,7 @@ const OrderCard = ({ order, onClick }) => {
 
               <button
                 onClick={() => onClick()}
-                className="w-full mt-3 py-2 bg-orange-50 text-orange-500 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
+                className="w-full mt-3 py-2 bg-orange-50 text-orange-500 rounded-lg text-sm font-medium hover:bg-orange-100 transition-colors"
               >
                 View full order details
               </button>
@@ -234,10 +251,11 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
 
-  const API_URL = "https://ecom-sandras-g6abfyg2azbqekf8.southeastasia-01.azurewebsites.net/api/orders";
+  const REACT_APP_API_URL = `${process.env.REACT_APP_API_URL}/orders`;
 
-  const fetchOrders = () => {
+  const fetchOrders = async (isAutoRefresh = false) => {
     const token = localStorage.getItem("authToken");
     if (!token) {
       setError("Unauthorized - No token found");
@@ -245,27 +263,37 @@ const Orders = () => {
       return;
     }
 
-    setRefreshing(true);
+    if (!isAutoRefresh) {
+      setRefreshing(true);
+    }
 
-    fetch(API_URL, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch orders");
-        return res.json();
-      })
-      .then((data) => {
-        setOrders(data);
-        applyFilter(activeTab, data);
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => {
-        setLoading(false);
-        setRefreshing(false);
+    try {
+      const res = await fetch(REACT_APP_API_URL, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
+
+      if (!res.ok) throw new Error("Failed to fetch orders");
+      
+      const data = await res.json();
+      setOrders(data);
+      applyFilter(activeTab, data);
+      
+      // Update selected order if it's currently being viewed
+      if (selectedOrder) {
+        const updatedSelectedOrder = data.find(o => o._id === selectedOrder._id);
+        if (updatedSelectedOrder) {
+          setSelectedOrder(updatedSelectedOrder);
+        }
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   };
 
   const applyFilter = (tab, ordersList = orders) => {
@@ -277,12 +305,24 @@ const Orders = () => {
   };
 
   const handleRefresh = () => {
-    fetchOrders();
+    fetchOrders(false);
   };
 
+  // Initial fetch
   useEffect(() => {
-    fetchOrders();
+    fetchOrders(false);
   }, []);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const interval = setInterval(() => {
+      fetchOrders(true);
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [autoRefresh, activeTab, selectedOrder]);
 
   useEffect(() => {
     applyFilter(activeTab);
@@ -308,8 +348,8 @@ const Orders = () => {
           <h2 className="text-xl font-semibold mb-2">Error loading orders</h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={fetchOrders}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            onClick={() => fetchOrders(false)}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
           >
             Try Again
           </button>
@@ -336,24 +376,32 @@ const Orders = () => {
               <OrderStatus status={selectedOrder.status} />
             </div>
 
+            <div className="mb-4 p-3 bg-blue-50 rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Truck size={16} className="text-blue-600" />
+                <span className="text-sm font-medium text-blue-600">
+                  {selectedOrder.shippingStatus}
+                </span>
+              </div>
+              {autoRefresh && (
+                <span className="text-xs text-blue-500">Auto-updating</span>
+              )}
+            </div>
+
             <OrderTimeline order={selectedOrder} />
           </div>
 
           <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
             <h3 className="font-semibold mb-4">Products</h3>
             <div className="space-y-4">
-              {selectedOrder.products.map((product) => (
-
-                <div key={product.productId?._id || product.productId} className="flex gap-4">
-
+              {selectedOrder.products.map((product, index) => (
+                <div key={product.productId || index} className="flex gap-4">
                   {product.thumbnail ? (
                     <img
                       src={product.thumbnail}
                       alt={product.name}
                       className="w-16 h-16 object-cover rounded-lg"
                     />
-
-
                   ) : (
                     <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
                       <Package size={20} className="text-gray-400" />
@@ -403,7 +451,7 @@ const Orders = () => {
                 <CreditCard size={20} className="text-gray-400 mt-0.5" />
                 <div>
                   <p className="font-medium">Payment Method</p>
-                  <p className="text-gray-600 capitalize">{selectedOrder.paymentMethod}</p>
+                  <p className="text-gray-600">{selectedOrder.paymentMethod}</p>
                 </div>
               </div>
             </div>
@@ -413,14 +461,25 @@ const Orders = () => {
         <div className="max-w-md mx-auto px-4 pt-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">My Orders</h1>
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="text-orange-500 hover:text-orange-800 flex items-center gap-1"
-            >
-              <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
-              <span className="text-sm">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={autoRefresh}
+                  onChange={(e) => setAutoRefresh(e.target.checked)}
+                  className="rounded"
+                />
+                <span className="text-gray-600">Auto-refresh</span>
+              </label>
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="text-orange-500 hover:text-orange-800 flex items-center gap-1"
+              >
+                <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
+                <span className="text-sm">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+              </button>
+            </div>
           </div>
 
           <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -462,7 +521,10 @@ const Orders = () => {
                     ? "You haven't placed any orders yet."
                     : `You don't have any ${activeTab} orders.`}
                 </p>
-                <button className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <button 
+                  onClick={() => window.location.href = '/'}
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                >
                   Start Shopping
                 </button>
               </div>

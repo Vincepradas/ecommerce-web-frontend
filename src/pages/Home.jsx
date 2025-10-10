@@ -21,7 +21,7 @@ const CategoryFilterDropdown = ({ categories, filter, setFilter, setCurrentPage,
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-funnel-x-icon lucide-funnel-x"><path d="M12.531 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14v6a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341l.427-.473" /><path d="m16.5 3.5 5 5" /><path d="m21.5 3.5-5 5" /></svg>
             ) : (
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-funnel-plus-icon lucide-funnel-plus"><path d="M13.354 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14v6a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341l1.218-1.348" /><path d="M16 6h6" /><path d="M19 3v6" /></svg>
-              )}
+            )}
           </button>
           <button
             className="flex items-center gap-1 bg-[#FF6F00] text-white text-sm p-2 rounded-full"
@@ -69,12 +69,13 @@ const CategoryFilterDropdown = ({ categories, filter, setFilter, setCurrentPage,
 };
 
 const Home = () => {
-  const { data: products, loading } = useFetch(`${config.API_URL}/products`);
+  const { data: products, loading } = useFetch(`${process.env.REACT_APP_API_URL}/products`);
   const [filter, setFilter] = useState(null);
   const [sortOrder, setSortOrder] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  console.log("API url", process.env.REACT_APP_API_URL)
   const categories = [...new Set(products?.map((product) => product.category))];
 
   let filteredProducts = products?.filter((product) =>
@@ -96,9 +97,9 @@ const Home = () => {
   return (
     <div className="home bg-white">
       <div className="container mx-auto mt-1 px-4 md:px-8">
-<h2 className="font-serif font-semibold text-5xl md:text-4xl text-[#1F2232] text-center my-4">
-  EXPLORE <span className="text-[#FF6F00]"> SANDRA'S</span>
-</h2>
+        <h2 className="font-serif font-semibold text-5xl md:text-4xl text-[#1F2232] text-center my-4">
+          EXPLORE <span className="text-[#FF6F00]"> SANDRA'S</span>
+        </h2>
 
 
         <CategoryFilterDropdown
@@ -119,7 +120,7 @@ const Home = () => {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-black/50">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.875" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-banknote-icon lucide-banknote"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.875" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-banknote-icon lucide-banknote"><rect width="20" height="12" x="2" y="6" rx="2" /><circle cx="12" cy="12" r="2" /><path d="M6 12h.01M18 12h.01" /></svg></span>
               <span class="text-xs sm:text-sm text-black/50 font-poppins">Cash on delivery</span>
             </div>
           </div>

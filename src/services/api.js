@@ -7,7 +7,7 @@ export const fetchProducts = async () => {
 };
 
 export const fetchProductById = async (id) => {
-    const response = await fetch(`${apiUrl}/products/${id}`);
+    const response = await fetch(`${apiUrl}/products/?id=${id}`);
     const data = await response.json();
     return data;
 };
