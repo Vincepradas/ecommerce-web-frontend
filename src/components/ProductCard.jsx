@@ -1,7 +1,31 @@
 import { Link } from "react-router-dom";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
+import { useState, useEffect } from "react";
 
 const ProductCard = ({ product }) => {
+  const [reviews, setReviews] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchReviewCount = async () => {
+      try {
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/reviews/product/${product._id}`);
+        if (!res.ok) throw new Error("Error fetching reviews");
+        const data = await res.json();
+        if (isMounted) setReviews(Array.isArray(data) ? data.length : 0);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchReviewCount();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [product._id]);
+
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -43,9 +67,7 @@ const ProductCard = ({ product }) => {
           <div className="flex items-center text-xs mt-1 gap-1">
             {renderStars(product.rating)}
             <span className="text-gray-500 ml-1">{product.rating.toFixed(1)}</span>
-            <span className="text-gray-400 ml-1">
-              ({product.reviews?.length || "0"})
-            </span>
+            <span className="text-gray-400 ml-1">({reviews})</span>
           </div>
           <div className="mt-2">
             {product.discountPercentage > 0 ? (
@@ -83,9 +105,7 @@ const ProductCard = ({ product }) => {
         <div className="flex items-center text-xs mt-1 gap-1">
           {renderStars(product.rating)}
           <span className="text-gray-500 ml-1">{product.rating.toFixed(1)}</span>
-          <span className="text-gray-400 ml-1">
-            ({product.reviews?.length || "0"})
-          </span>
+          <span className="text-gray-400 ml-1">({reviews})</span>
         </div>
         <div className="mt-2">
           {product.discountPercentage > 0 ? (
