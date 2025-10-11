@@ -74,15 +74,13 @@ const Home = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // FIX: Only run once on mount, removed fetchAllProducts from dependencies
   useEffect(() => {
     if (!allProducts) {
       fetchAllProducts().catch((error) => {
         console.error('Error fetching all products:', error);
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array - runs only once on mount
+  }, []); 
 
   const products = allProducts;
   const loading = allProductsLoading;

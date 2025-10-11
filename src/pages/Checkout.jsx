@@ -56,26 +56,31 @@ const Checkout = () => {
   const location = useLocation();
   const { isDirectCheckout, directItemData, cartItems } = location.state || {};
 
-  // Handle payment verification on return from PayMongo
+
   useEffect(() => {
     const verifyPayment = async () => {
       const params = new URLSearchParams(window.location.search);
       const linkId = params.get("id");
-      
-      if (!linkId) return;
 
+      console.log("🔍 Payment verification - Link ID:", linkId);
+      if (!linkId) {
+        console.log("❌ No link ID found, skipping payment verification");
+        return;
+      }
+
+      console.log("🚀 Verifying payment with link ID:", linkId);
       try {
         const res = await fetch(`${config.REACT_APP_API_URL}/payments/verify/${linkId}`);
         const data = await res.json();
 
         if (data.success && data.status === "paid") {
-          // Payment successful - webhook already updated order status
-          // Clear cart items
+
+
           const token = user?.token || localStorage.getItem("authToken");
           const storedOrderId = localStorage.getItem("pendingOrderId");
-          
+
           if (storedOrderId) {
-            // Clear cart if this was a cart checkout
+
             const cartItemsStr = localStorage.getItem("pendingCartItems");
             if (cartItemsStr) {
               const cartItems = JSON.parse(cartItemsStr);
@@ -97,14 +102,13 @@ const Checkout = () => {
             }
             localStorage.removeItem("pendingOrderId");
           }
-          
-          // Redirect to orders with success message
-          navigate("/orders", { 
+
+          navigate("/orders", {
             state: { orderSuccess: true },
-            replace: true 
+            replace: true
           });
         } else {
-          // Payment failed or cancelled - webhook already cancelled the order
+
           localStorage.removeItem("pendingOrderId");
           localStorage.removeItem("pendingCartItems");
           alert("Payment was not completed. Your order has been cancelled.");
@@ -157,11 +161,29 @@ const Checkout = () => {
   }, [isDirectCheckout, directItemData, navigate, cartItems, location.state]);
 
   useEffect(() => {
+    // Test API connectivity
+    const testConnection = async () => {
+      console.log("🧪 Testing API connectivity...");
+      try {
+        const response = await fetch(`${config.REACT_APP_API_URL}/products?limit=1`);
+        console.log("✅ API connection test:", response.status, response.ok);
+      } catch (error) {
+        console.log("❌ API connection failed:", error.message);
+      }
+    };
+    testConnection();
+
     const fetchUserInfoAndAddresses = async () => {
       const token = user?.token || localStorage.getItem("authToken");
-      if (!token) return;
+      console.log("🔍 Token found:", !!token);
+      console.log("🔍 API URL:", config.REACT_APP_API_URL);
+      if (!token) {
+        console.log("❌ No token found, skipping API call");
+        return;
+      }
 
       setLoading(true);
+      console.log("🚀 Making API call to fetch user info and addresses");
       try {
         const response = await fetch(`${config.REACT_APP_API_URL}/user/`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -239,17 +261,41 @@ const Checkout = () => {
     }
   };
 
+  // Add a test function you can call from console
+  window.testCheckoutAPI = async () => {
+    console.log("🧪 Manual API test");
+    const token = user?.token || localStorage.getItem("authToken");
+    try {
+      const response = await fetch(`${config.REACT_APP_API_URL}/user/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("✅ Manual test result:", response.status, await response.text());
+    } catch (error) {
+      console.log("❌ Manual test failed:", error);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("🔍 Form submitted");
+    console.log("🔍 Payment method:", paymentMethod);
+    console.log("🔍 Selected address:", selectedAddress);
+    
     if (!paymentMethod || !selectedAddress) {
+      console.log("❌ Missing required fields - payment method or address");
       alert("Please fill in all required fields");
       return;
     }
 
     const token = user?.token || localStorage.getItem("authToken");
-    if (!token) return;
+    console.log("🔍 Token found:", !!token);
+    if (!token) {
+      console.log("❌ No token found, cannot proceed with order");
+      return;
+    }
 
     setLoading(true);
+    console.log("🚀 Starting order creation process");
     try {
       let orderPayload;
 
@@ -281,7 +327,9 @@ const Checkout = () => {
         return;
       }
 
-      // Create order first
+      console.log("📦 Order payload:", orderPayload);
+      console.log("🌐 Making API call to:", `${config.REACT_APP_API_URL}/orders`);
+
       const orderResponse = await fetch(`${config.REACT_APP_API_URL}/orders`, {
         method: "POST",
         headers: {
@@ -297,15 +345,15 @@ const Checkout = () => {
 
       const orderData = await orderResponse.json();
       const orderId = orderData._id || orderData.id;
-      
-      // Store order ID for potential cancellation (only for GCash payments)
+
+
       if (paymentMethod === "GCash") {
         localStorage.setItem("pendingOrderId", orderId);
       }
 
-      // Handle Cash on Delivery
+
       if (paymentMethod === "Cash on Delivery") {
-        // Clear cart items if not direct checkout
+
         if (!isDirectCheckout && location.state?.cartItems) {
           const productIdsToRemove = location.state.cartItems.map(item => item.productId);
           try {
@@ -323,13 +371,13 @@ const Checkout = () => {
             console.warn("Error removing checked out items from cart:", clearError);
           }
         }
-        
+
         localStorage.removeItem("pendingOrderId");
         navigate("/orders", { state: { orderSuccess: true } });
         return;
       }
 
-      // Handle GCash payment
+
       if (paymentMethod === "GCash") {
         const paymentResponse = await fetch(`${config.REACT_APP_API_URL}/payments/create-payment-intent`, {
           method: "POST",
@@ -337,26 +385,26 @@ const Checkout = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            amount: Math.round(orderSummary.totalPrice * 100), // Convert to centavos
+            amount: Math.round(orderSummary.totalPrice * 100),
             description: orderSummary.productName || "Order Payment",
-            orderId: orderId, // Send order ID to link with payment
+            orderId: orderId,
           }),
         });
 
         if (paymentResponse.ok) {
           const data = await paymentResponse.json();
-          
-          // Store order ID and cart items for cleanup after payment
+
+
           localStorage.setItem("pendingOrderId", orderId);
-          
-          // Clear cart items before redirecting to payment
+
+
           if (!isDirectCheckout && location.state?.cartItems) {
             const productIdsToRemove = location.state.cartItems.map(item => item.productId);
-            // Store cart items to remove after successful payment
+
             localStorage.setItem("pendingCartItems", JSON.stringify(productIdsToRemove));
           }
 
-          // Redirect to PayMongo checkout
+
           window.location.href = data.data.attributes.checkout_url;
         } else {
           throw new Error("Failed to create payment link");
@@ -531,7 +579,7 @@ const Checkout = () => {
               </h3>
 
               <div className="space-y-3">
-                {['Cash on Delivery', 'GCash/Maya/Credit Card'].map((method) => (
+                {['Cash on Delivery', 'GCash'].map((method) => (
                   <label
                     key={method}
                     className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${paymentMethod === method ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300'}`}
