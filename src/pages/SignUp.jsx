@@ -9,7 +9,7 @@ const Signup = () => {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [showPassword, setShowPassword] = useState(false); 
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -51,11 +51,11 @@ const Signup = () => {
           >
             Enter your details or sign up with your google account.
           </Typography>
-        <img
-          src={signupBanner2}
-          alt="asdsadasd"
-          className="w-full h-auto"
-        />
+          <img
+            src={signupBanner2}
+            alt="asdsadasd"
+            className="w-full h-auto"
+          />
           {/* Message */}
           {message && (
             <p

@@ -280,7 +280,7 @@ const Checkout = () => {
     console.log("🔍 Form submitted");
     console.log("🔍 Payment method:", paymentMethod);
     console.log("🔍 Selected address:", selectedAddress);
-    
+
     if (!paymentMethod || !selectedAddress) {
       console.log("❌ Missing required fields - payment method or address");
       alert("Please fill in all required fields");

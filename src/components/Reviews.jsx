@@ -20,7 +20,7 @@ const Reviews = ({ productId }) => {
         if (data.error) {
           console.error("Error fetching reviews:", data.error);
         } else {
-          // Handle new response format - data is array directly or data.reviews
+
           const reviewsArray = Array.isArray(data) ? data : (data.reviews || []);
           setReviews(reviewsArray);
           setDisplayedReviews(reviewsArray.slice(0, 2));
@@ -53,10 +53,10 @@ const Reviews = ({ productId }) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         productId,
-        comment: newReview.trim(), 
-        rating 
+        comment: newReview.trim(),
+        rating
       }),
     })
       .then((res) => {
@@ -66,10 +66,10 @@ const Reviews = ({ productId }) => {
         return res.json();
       })
       .then((data) => {
-        // Create optimistic review object with user info
+
         const userName = user?.name || localStorage.getItem("userName") || "Anonymous";
         const userId = user?.id || localStorage.getItem("userId");
-        
+
         const newReviewObj = {
           _id: data._id || Date.now().toString(),
           productId: productId,
@@ -82,7 +82,7 @@ const Reviews = ({ productId }) => {
           createdAt: new Date().toISOString()
         };
 
-        // Add new review to the beginning
+
         setReviews(prevReviews => [newReviewObj, ...prevReviews]);
         setDisplayedReviews(prevDisplayed => {
           const newDisplayed = [newReviewObj, ...prevDisplayed];
@@ -103,7 +103,7 @@ const Reviews = ({ productId }) => {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return '';
-      
+
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
@@ -121,7 +121,7 @@ const Reviews = ({ productId }) => {
   return (
     <div className="reviews-section bg-white rounded-lg">
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-      
+
       <h2 className="text-xl font-medium mb-4 text-[#1F2232] font-poppins">
         Customer Reviews ({reviews.length})
       </h2>
@@ -141,7 +141,7 @@ const Reviews = ({ productId }) => {
                     </span>
                   )}
                 </div>
-                
+
                 <div className="flex items-center space-x-1 mb-2">
                   {[...Array(5)].map((_, i) => (
                     <FaStar
@@ -152,7 +152,7 @@ const Reviews = ({ productId }) => {
                   ))}
                   <span className="text-gray-600 text-sm ml-1">{review.rating}/5</span>
                 </div>
-                
+
                 <p className="text-gray-700 text-sm">{review.comment}</p>
               </div>
             )
@@ -180,7 +180,7 @@ const Reviews = ({ productId }) => {
       {isAuthenticated ? (
         <div className="add-review bg-white p-4 rounded-md shadow-sm border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-3">Add a Review</h3>
-          
+
           <div className="mb-3">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Rating
@@ -189,12 +189,11 @@ const Reviews = ({ productId }) => {
               {[...Array(5)].map((_, i) => (
                 <FaStar
                   key={i}
-                  className={`cursor-pointer transition-colors ${
-                    i < rating ? "text-yellow-400" : "text-gray-300"
-                  }`}
+                  className={`cursor-pointer transition-colors ${i < rating ? "text-yellow-400" : "text-gray-300"
+                    }`}
                   size={28}
                   onClick={() => setRating(i + 1)}
-                  onMouseEnter={() => {}}
+                  onMouseEnter={() => { }}
                 />
               ))}
               {rating > 0 && (

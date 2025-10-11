@@ -93,7 +93,7 @@ const OrderTimeline = ({ order }) => {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return null;
-      
+
       return date.toLocaleString('en-US', {
         year: 'numeric',
         month: 'short',
@@ -276,12 +276,12 @@ const Orders = () => {
       });
 
       if (!res.ok) throw new Error("Failed to fetch orders");
-      
+
       const data = await res.json();
       setOrders(data);
       applyFilter(activeTab, data);
-      
-      // Update selected order if it's currently being viewed
+
+
       if (selectedOrder) {
         const updatedSelectedOrder = data.find(o => o._id === selectedOrder._id);
         if (updatedSelectedOrder) {
@@ -308,18 +308,18 @@ const Orders = () => {
     fetchOrders(false);
   };
 
-  // Initial fetch
+
   useEffect(() => {
     fetchOrders(false);
   }, []);
 
-  // Auto-refresh every 30 seconds
+
   useEffect(() => {
     if (!autoRefresh) return;
 
     const interval = setInterval(() => {
       fetchOrders(true);
-    }, 30000); // 30 seconds
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [autoRefresh, activeTab, selectedOrder]);
@@ -521,7 +521,7 @@ const Orders = () => {
                     ? "You haven't placed any orders yet."
                     : `You don't have any ${activeTab} orders.`}
                 </p>
-                <button 
+                <button
                   onClick={() => window.location.href = '/'}
                   className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
                 >

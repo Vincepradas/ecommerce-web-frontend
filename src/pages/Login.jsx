@@ -15,18 +15,18 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [touched, setTouched] = useState({ email: false, password: false });
 
-  // Email validation
+
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // Password validation
+
   const validatePassword = (password) => {
     return password.length >= 6;
   };
 
-  // Get field errors
+
   const getEmailError = () => {
     if (!touched.email) return "";
     if (!email) return "Email is required";
@@ -49,10 +49,10 @@ const Login = () => {
     e.preventDefault();
     setError("");
 
-    // Mark all fields as touched
+
     setTouched({ email: true, password: true });
 
-    // Validate before submission
+
     if (!isFormValid) {
       setError("Please fix the errors before submitting");
       return;
@@ -62,8 +62,8 @@ const Login = () => {
 
     try {
       await login(email, password);
-      
-      // Save email if remember me is checked
+
+
       if (rememberMe) {
         localStorage.setItem("rememberedEmail", email);
       } else {
@@ -73,8 +73,8 @@ const Login = () => {
       window.location.href = "/home";
     } catch (error) {
       console.error("Login error:", error);
-      
-      // More specific error messages
+
+
       if (error.response?.status === 401) {
         setError("Invalid email or password. Please try again.");
       } else if (error.response?.status === 429) {
@@ -91,11 +91,11 @@ const Login = () => {
 
   const handleGoogleLogin = (e) => {
     e.preventDefault();
-    // Implement Google OAuth login here
+
     alert("Google login integration coming soon!");
   };
 
-  // Load remembered email on component mount
+
   useState(() => {
     const rememberedEmail = localStorage.getItem("rememberedEmail");
     if (rememberedEmail) {
@@ -128,7 +128,7 @@ const Login = () => {
           You can also sign in with your google account.
         </Typography>
 
-        <img  
+        <img
           src={loginBanner}
           alt="Login illustration"
           className="w-full h-auto mb-5"
@@ -155,11 +155,10 @@ const Login = () => {
               }}
               onBlur={() => setTouched({ ...touched, email: true })}
               disabled={isLoading}
-              className={`w-full px-4 py-2 border text-sm rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                emailError
+              className={`w-full px-4 py-2 border text-sm rounded-lg focus:outline-none focus:ring-2 transition-colors ${emailError
                   ? "border-red-500 focus:ring-red-400"
                   : "border-gray-300 focus:ring-orange-400"
-              } disabled:bg-gray-100 disabled:cursor-not-allowed`}
+                } disabled:bg-gray-100 disabled:cursor-not-allowed`}
               placeholder="you@example.com"
               autoComplete="email"
             />
@@ -187,11 +186,10 @@ const Login = () => {
                 }}
                 onBlur={() => setTouched({ ...touched, password: true })}
                 disabled={isLoading}
-                className={`w-full px-4 py-2 pr-12 border text-sm rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                  passwordError
+                className={`w-full px-4 py-2 pr-12 border text-sm rounded-lg focus:outline-none focus:ring-2 transition-colors ${passwordError
                     ? "border-red-500 focus:ring-red-400"
                     : "border-gray-300 focus:ring-orange-400"
-                } disabled:bg-gray-100 disabled:cursor-not-allowed`}
+                  } disabled:bg-gray-100 disabled:cursor-not-allowed`}
                 placeholder="••••••••"
                 autoComplete="current-password"
               />

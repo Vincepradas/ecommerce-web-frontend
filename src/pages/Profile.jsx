@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { 
-  UserCircle, 
-  Envelope, 
-  Phone, 
-  MapPin, 
-  Calendar, 
+import {
+  UserCircle,
+  Envelope,
+  Phone,
+  MapPin,
+  Calendar,
   ArrowLeft,
   Gear,
   CreditCard,
@@ -91,14 +91,14 @@ const ProfilePage = () => {
       {/* Header */}
       <div className="relative bg-gradient-to-r from-orange-500 to-amber-500 h-48 rounded-b-3xl shadow-md">
         <div className="absolute top-6 left-6">
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className="bg-white/20 backdrop-blur-sm p-2 rounded-full text-white hover:bg-white/30 transition-all"
           >
             <ArrowLeft size={24} />
           </button>
         </div>
-        
+
         <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
           <div className="relative">
             <img
@@ -127,11 +127,10 @@ const ProfilePage = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  activeTab === tab 
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeTab === tab
                     ? "bg-orange-500 text-white shadow-md"
                     : "text-gray-600 hover:text-gray-800"
-                }`}
+                  }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
@@ -140,7 +139,7 @@ const ProfilePage = () => {
         </div>
 
         {/* Tab Content */}
-        <motion.div 
+        <motion.div
           key={activeTab}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -210,7 +209,7 @@ const ProfilePage = () => {
               <p className="text-gray-500 mb-4">
                 You haven't placed any orders yet.
               </p>
-              <button 
+              <button
                 onClick={() => navigate("/products")}
                 className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-6 rounded-lg transition-all"
               >
@@ -226,7 +225,7 @@ const ProfilePage = () => {
               <p className="text-gray-500 mb-4">
                 Items you save will appear here.
               </p>
-              <button 
+              <button
                 onClick={() => navigate("/products")}
                 className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-6 rounded-lg transition-all"
               >
@@ -242,7 +241,7 @@ const ProfilePage = () => {
               <p className="text-gray-500 mb-4">
                 No payment methods saved yet.
               </p>
-              <button 
+              <button
                 className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-6 rounded-lg transition-all"
               >
                 Add Payment Method
