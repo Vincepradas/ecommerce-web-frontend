@@ -12,7 +12,6 @@ import {
 } from "phosphor-react";
 import AuthContext from "../context/AuthContext";
 import config from "../config";
-import { motion, AnimatePresence } from "framer-motion";
 
 const StepIndicator = ({ steps, currentStep }) => {
   return (
@@ -51,10 +50,74 @@ const Checkout = () => {
   const [isDeliveryAvailable, setIsDeliveryAvailable] = useState(true);
   const [orderSummary, setOrderSummary] = useState(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState(null);
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
   const { isDirectCheckout, directItemData, cartItems } = location.state || {};
+
+  // Handle payment verification on return from PayMongo
+  useEffect(() => {
+    const verifyPayment = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const linkId = params.get("id");
+      
+      if (!linkId) return;
+
+      try {
+        const res = await fetch(`${config.REACT_APP_API_URL}/payments/verify/${linkId}`);
+        const data = await res.json();
+
+        if (data.success && data.status === "paid") {
+          // Payment successful - webhook already updated order status
+          // Clear cart items
+          const token = user?.token || localStorage.getItem("authToken");
+          const storedOrderId = localStorage.getItem("pendingOrderId");
+          
+          if (storedOrderId) {
+            // Clear cart if this was a cart checkout
+            const cartItemsStr = localStorage.getItem("pendingCartItems");
+            if (cartItemsStr) {
+              const cartItems = JSON.parse(cartItemsStr);
+              for (const productId of cartItems) {
+                try {
+                  await fetch(`${config.REACT_APP_API_URL}/cart/remove`, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ productId }),
+                  });
+                } catch (error) {
+                  console.warn("Error removing item from cart:", error);
+                }
+              }
+              localStorage.removeItem("pendingCartItems");
+            }
+            localStorage.removeItem("pendingOrderId");
+          }
+          
+          // Redirect to orders with success message
+          navigate("/orders", { 
+            state: { orderSuccess: true },
+            replace: true 
+          });
+        } else {
+          // Payment failed or cancelled - webhook already cancelled the order
+          localStorage.removeItem("pendingOrderId");
+          localStorage.removeItem("pendingCartItems");
+          alert("Payment was not completed. Your order has been cancelled.");
+          navigate("/cart", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying payment:", error);
+        alert("Error verifying payment. Please contact support.");
+      }
+    };
+
+    verifyPayment();
+  }, [navigate, user]);
 
   useEffect(() => {
     if (isDirectCheckout && directItemData) {
@@ -73,7 +136,7 @@ const Checkout = () => {
       setOrderSummary(summary);
     } else if (cartItems) {
       const formattedItems = location.state.cartItems
-        .filter(item => item.productName) // Filter out invalid items
+        .filter(item => item.productName)
         .map(item => ({
           quantity: item.quantity || 1,
           price: item.price || 0,
@@ -160,98 +223,154 @@ const Checkout = () => {
     }
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!paymentMethod || !selectedAddress) {
-    alert("Please fill in all required fields");
-    return;
-  }
+  const cancelOrder = async (orderId) => {
+    const token = user?.token || localStorage.getItem("authToken");
+    try {
+      await fetch(`${config.REACT_APP_API_URL}/orders/${orderId}/cancel`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: "cancelled", cancelReason: "User cancelled payment" }),
+      });
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+    }
+  };
 
-  const token = user?.token || localStorage.getItem("authToken");
-  if (!token) return;
-
-  setLoading(true);
-  try {
-    let orderPayload;
-
-    if (isDirectCheckout && directItemData) {
-      // For direct checkout (Buy Now), DO NOT remove from cart
-      // Just create the order with the specific item
-      orderPayload = {
-        paymentMethod,
-        address: selectedAddress,
-        products: [{
-          productId: directItemData.productId,
-          productName: directItemData.productName,
-          quantity: directItemData.quantity,
-          price: directItemData.price,
-          discountPercentage: directItemData.discountPercentage,
-          totalPrice: directItemData.totalPrice,
-        }],
-        totalAmount: directItemData.totalPrice,
-        isDirectCheckout: true, // Flag to tell backend this is a direct checkout
-      };
-    } else if (location.state?.cartItems) {
-      // For cart checkout, prepare the payload
-      orderPayload = {
-        paymentMethod,
-        address: selectedAddress,
-        products: location.state.cartItems,
-        totalAmount: location.state.totalAmount,
-        isDirectCheckout: false,
-      };
-    } else {
-      alert("Invalid checkout data");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!paymentMethod || !selectedAddress) {
+      alert("Please fill in all required fields");
       return;
     }
 
-    // Create the order
-    const orderResponse = await fetch(`${config.REACT_APP_API_URL}/orders`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(orderPayload),
-    });
+    const token = user?.token || localStorage.getItem("authToken");
+    if (!token) return;
 
-    if (!orderResponse.ok) {
-      throw new Error("Failed to create order");
-    }
+    setLoading(true);
+    try {
+      let orderPayload;
 
-    // ONLY clear cart items if this is a cart checkout (not direct checkout)
-    if (!isDirectCheckout && location.state?.cartItems) {
-      // Remove only the specific items that were checked out from cart
-      const productIdsToRemove = location.state.cartItems.map(item => item.productId);
-      
-      try {
-        // Remove each checked out item from the cart
-        for (const productId of productIdsToRemove) {
-          await fetch(`${config.REACT_APP_API_URL}/cart/remove`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ productId }),
-          });
-        }
-      } catch (clearError) {
-        console.warn("Error removing checked out items from cart:", clearError);
+      if (isDirectCheckout && directItemData) {
+        orderPayload = {
+          paymentMethod,
+          address: selectedAddress,
+          products: [{
+            productId: directItemData.productId,
+            productName: directItemData.productName,
+            quantity: directItemData.quantity,
+            price: directItemData.price,
+            discountPercentage: directItemData.discountPercentage,
+            totalPrice: directItemData.totalPrice,
+          }],
+          totalAmount: directItemData.totalPrice,
+          isDirectCheckout: true,
+        };
+      } else if (location.state?.cartItems) {
+        orderPayload = {
+          paymentMethod,
+          address: selectedAddress,
+          products: location.state.cartItems,
+          totalAmount: location.state.totalAmount,
+          isDirectCheckout: false,
+        };
+      } else {
+        alert("Invalid checkout data");
+        return;
       }
-    }
 
-    navigate("/orders", { state: { orderSuccess: true } });
-  } catch (error) {
-    console.error("Error in checkout process:", error);
-    alert("There was an error processing your order. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+      // Create order first
+      const orderResponse = await fetch(`${config.REACT_APP_API_URL}/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(orderPayload),
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error("Failed to create order");
+      }
+
+      const orderData = await orderResponse.json();
+      const orderId = orderData._id || orderData.id;
+      
+      // Store order ID for potential cancellation (only for GCash payments)
+      if (paymentMethod === "GCash") {
+        localStorage.setItem("pendingOrderId", orderId);
+      }
+
+      // Handle Cash on Delivery
+      if (paymentMethod === "Cash on Delivery") {
+        // Clear cart items if not direct checkout
+        if (!isDirectCheckout && location.state?.cartItems) {
+          const productIdsToRemove = location.state.cartItems.map(item => item.productId);
+          try {
+            for (const productId of productIdsToRemove) {
+              await fetch(`${config.REACT_APP_API_URL}/cart/remove`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ productId }),
+              });
+            }
+          } catch (clearError) {
+            console.warn("Error removing checked out items from cart:", clearError);
+          }
+        }
+        
+        localStorage.removeItem("pendingOrderId");
+        navigate("/orders", { state: { orderSuccess: true } });
+        return;
+      }
+
+      // Handle GCash payment
+      if (paymentMethod === "GCash") {
+        const paymentResponse = await fetch(`${config.REACT_APP_API_URL}/payments/create-payment-intent`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amount: Math.round(orderSummary.totalPrice * 100), // Convert to centavos
+            description: orderSummary.productName || "Order Payment",
+            orderId: orderId, // Send order ID to link with payment
+          }),
+        });
+
+        if (paymentResponse.ok) {
+          const data = await paymentResponse.json();
+          
+          // Store order ID and cart items for cleanup after payment
+          localStorage.setItem("pendingOrderId", orderId);
+          
+          // Clear cart items before redirecting to payment
+          if (!isDirectCheckout && location.state?.cartItems) {
+            const productIdsToRemove = location.state.cartItems.map(item => item.productId);
+            // Store cart items to remove after successful payment
+            localStorage.setItem("pendingCartItems", JSON.stringify(productIdsToRemove));
+          }
+
+          // Redirect to PayMongo checkout
+          window.location.href = data.data.attributes.checkout_url;
+        } else {
+          throw new Error("Failed to create payment link");
+        }
+      }
+    } catch (error) {
+      console.error("Error in checkout process:", error);
+      alert("There was an error processing your order. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const OrderItem = ({ item }) => {
-    // Add null checks for the item prop
     if (!item || !item.productName) return null;
 
     return (
@@ -306,7 +425,7 @@ const handleSubmit = async (e) => {
                 <div className="pt-4 border-t border-gray-100">
                   <div className="flex justify-between font-medium">
                     <span>Subtotal</span>
-                    <span >PHP {orderSummary.totalPrice.toFixed(2)}</span>
+                    <span>PHP {orderSummary.totalPrice.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-gray-500 mt-2">
                     <span>Shipping</span>
@@ -412,7 +531,7 @@ const handleSubmit = async (e) => {
               </h3>
 
               <div className="space-y-3">
-                {['Cash on Delivery', 'GCash'].map((method) => (
+                {['Cash on Delivery', 'GCash/Maya/Credit Card'].map((method) => (
                   <label
                     key={method}
                     className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${paymentMethod === method ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300'}`}
