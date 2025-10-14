@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 
 const MobileOnlyLayout = ({ children }) => {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth <= 768 : true
+  );
 
   useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth <= 768);
+    const handleResize = () => {
+      const next = window.innerWidth <= 768;
+
+      setIsMobile((prev) => (prev !== next ? next : prev));
     };
 
-    checkScreenSize();
-    window.addEventListener("resize", checkScreenSize);
-
-    return () => window.removeEventListener("resize", checkScreenSize);
-  }, [isMobile]);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <div>

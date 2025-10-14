@@ -1,14 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import ProductCard from "../components/ProductCard";
 import { useProductContext } from "../context/ProductContext";
+import { fetchVisitCount } from "../hooks/fetchVisitCount";
 
 const CategoryFilterDropdown = ({ categories, filter, setFilter, setCurrentPage, sortOrder, setSortOrder }) => {
   const [showFilters, setShowFilters] = useState(false);
-  console.log(process.env.REACT_APP_API_URL);
+
+  const handleFilterChange = (newFilter) => {
+    setFilter(newFilter);
+    setCurrentPage(1);
+  };
+
   return (
     <div className="mt-4 font-[400] rounded-md p-2 max-w-sm mx-auto text-left border-b">
+
       <div className="flex justify-between items-center bg-white py-2 rounded-md">
         <h1 className="font-medium font-poppins text-md text-[#FF6F00]">BROWSE OUR COLLECTIONS!</h1>
         <div className="flex items-center gap-2">
@@ -47,7 +54,7 @@ const CategoryFilterDropdown = ({ categories, filter, setFilter, setCurrentPage,
           <div className="flex flex-wrap gap-2">
             <button
               className={`px-4 py-1.5 rounded-md text-xs font-semibold border transition duration-200 ${!filter ? "bg-[#FF6F00] text-white border-[#FF6F00]" : "bg-white text-[#FF6F00] border-[#FF6F00] hover:bg-[#FF6F00]/10"}`}
-              onClick={() => setFilter(null)}
+              onClick={() => handleFilterChange(null)}
             >
               All
             </button>
@@ -55,7 +62,7 @@ const CategoryFilterDropdown = ({ categories, filter, setFilter, setCurrentPage,
               <button
                 key={category}
                 className={`px-4 py-1.5 rounded-md text-xs font-semibold border transition duration-200 ${filter === category ? "bg-[#FF6F00] text-white border-[#FF6F00]" : "bg-white text-[#FF6F00] border-[#FF6F00] hover:bg-[#FF6F00]/10"}`}
-                onClick={() => setFilter(category)}
+                onClick={() => handleFilterChange(category)}
               >
                 {category}
               </button>
@@ -72,6 +79,7 @@ const Home = () => {
   const [filter, setFilter] = useState(null);
   const [sortOrder, setSortOrder] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [visitCount, setVisitCount] = useState();
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -80,36 +88,63 @@ const Home = () => {
         console.error('Error fetching all products:', error);
       });
     }
-  }, []); 
+  }, [allProducts, fetchAllProducts]);
 
   const products = allProducts;
   const loading = allProductsLoading;
 
-  const categories = [...new Set(products?.map((product) => product.category))];
-
-  let filteredProducts = products?.filter((product) =>
-    filter ? product.category === filter : true
+  const categories = useMemo(() =>
+    [...new Set(products?.map((product) => product.category) || [])],
+    [products]
   );
 
-  if (sortOrder === 'asc') {
-    filteredProducts = [...filteredProducts].sort((a, b) => a.price - b.price);
-  } else if (sortOrder === 'desc') {
-    filteredProducts = [...filteredProducts].sort((a, b) => b.price - a.price);
-  }
+  const filteredAndSortedProducts = useMemo(() => {
+    if (!products) return [];
 
-  const indexOfLastProduct = currentPage * itemsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
-  const currentProducts = filteredProducts?.slice(indexOfFirstProduct, indexOfLastProduct);
+    let filtered = products.filter((product) =>
+      filter ? product.category === filter : true
+    );
+
+    if (sortOrder === 'asc') {
+      filtered = [...filtered].sort((a, b) => a.price - b.price);
+    } else if (sortOrder === 'desc') {
+      filtered = [...filtered].sort((a, b) => b.price - a.price);
+    }
+
+    return filtered;
+  }, [products, filter, sortOrder]);
+
+  const currentProducts = useMemo(() => {
+    const indexOfLastProduct = currentPage * itemsPerPage;
+    const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
+    return filteredAndSortedProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  }, [filteredAndSortedProducts, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredAndSortedProducts.length / itemsPerPage);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+  useEffect(() => {
+    const fetchVisit = async () => {
+      const response = await fetchVisitCount();
+      setVisitCount(response.count);
+      console.log(response.count);
+    };
+
+    fetchVisit();
+  }, []);
+
+
   return (
     <div className="home bg-white">
+      <div className="fixed bottom-4 left-4 z-50 backdrop-blur-md bg-white/10 border border-white/20 shadow-lg px-2  py-[4px] rounded-full text-[#FF6F00] font-poppins text-xs flex items-center gap-2">
+        <span className="tracking-wide">{visitCount} views</span>
+      </div>
+
       <div className="container mx-auto mt-1 px-4 md:px-8">
         <h2 className="font-serif font-semibold text-5xl md:text-4xl text-[#1F2232] text-center my-4">
           EXPLORE <span className="text-[#FF6F00]"> SANDRA'S</span>
         </h2>
-
 
         <CategoryFilterDropdown
           categories={categories}
@@ -133,12 +168,11 @@ const Home = () => {
               <span className="text-xs sm:text-sm text-black/50 font-poppins">Cash on delivery</span>
             </div>
           </div>
-
         </div>
+
         <div className="flex items-center justify-center px-2 pb-4 mb-4 border-b">
           <h1 className="text-xs text-black/50 font-poppins text-center">Click on any product to view more details. Free delivery for orders within Madrid!</h1>
         </div>
-
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {loading
@@ -160,10 +194,10 @@ const Home = () => {
           </p>
         )}
 
-        <div className="flex justify-center gap-4 mt-8">
-          {filteredProducts?.length > itemsPerPage && (
+        <div className="flex justify-center gap-4 mt-8 mb-8">
+          {filteredAndSortedProducts.length > itemsPerPage && (
             <div className="flex gap-2">
-              {Array.from({ length: Math.ceil(filteredProducts.length / itemsPerPage) }, (_, index) => index + 1).map((number) => (
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map((number) => (
                 <button
                   key={number}
                   className={`px-4 py-2 rounded-md ${number === currentPage ? "bg-[#FF6F00] text-white" : "bg-gray-300 text-black"}`}

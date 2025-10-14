@@ -6,11 +6,9 @@ import "./style/index.css";
 import MobileOnlyLayout from "./hooks/MobileOnlyLayout.js";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <HashRouter>
-      <MobileOnlyLayout>
-        <App />
-      </MobileOnlyLayout>
-    </HashRouter>
-  </React.StrictMode>
+  <HashRouter>
+    <MobileOnlyLayout>
+      <App />
+    </MobileOnlyLayout>
+  </HashRouter>
 );
